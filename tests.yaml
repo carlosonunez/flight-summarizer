@@ -1,0 +1,18 @@
+---
+live_flights:
+  - statuses:
+      flight: live
+      departure: ontime
+      arrival: ontime
+    want:
+      flight_number: AAL5598
+      origin:
+        airport: CLT
+        times:
+          scheduled: 2024-12-15T11:32:00-05:00
+          actual: 2024-12-15T11:32:00-05:00
+      destination:
+        airport: TUL
+        times:
+          scheduled: 2024-12-15T13:32:00-06:00
+          actual: 2024-12-15T13:14:00-06:00
