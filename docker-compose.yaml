@@ -1,0 +1,44 @@
+volumes:
+  gomod: {}
+  gocache: {}
+  outdir: {}
+services:
+  build:
+    image: golang:${GOLANG_VERSION}-alpine
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - outdir:/out
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+      - PROJECT_NAME
+    command:
+      - build
+      - -o 
+      - /out
+      - ./...
+  test:
+    image: golang:${GOLANG_VERSION}-alpine
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - outdir:/out
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - TEST_FILTER
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+    command:
+      - test
+      - -failfast
+      - ./...
+      - -run
+      - ${TEST_FILTER:-!E2E}
