@@ -11,10 +11,10 @@ import (
 	"github.com/carlosonunez/flight-summarizer/types"
 )
 
-const FIXTURE_PATH = "./fixtures"
+const FIXTURE_PATH = "../fixtures"
 
-func loadFixture(name string) ([]byte, error) {
-	path := filepath.Join(FIXTURE_PATH, strings.ReplaceAll(name, ".html", ""), ".html")
+func LoadFixture(name string) ([]byte, error) {
+	path := filepath.Join(FIXTURE_PATH, strings.ReplaceAll(name, ".html", "")+".html")
 	return os.ReadFile(path)
 }
 
