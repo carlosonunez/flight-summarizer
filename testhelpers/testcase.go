@@ -20,7 +20,7 @@ func (c *TestCase) LoadFixtureForTestCase() ([]byte, error) {
 	fp := fmt.Sprintf("%s_departure_%s_arrival",
 		*c.flightStatuses.DepartureStatus,
 		*c.flightStatuses.ArrivalStatus)
-	return loadFixture(fp)
+	return LoadFixture(fp)
 }
 
 type TestCaseFile struct {

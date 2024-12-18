@@ -18,7 +18,7 @@ func LoadFixture(name string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-func mustParseTime(tStr string) *time.Time {
+func MustParseTime(tStr string) *time.Time {
 	t, err := time.Parse(types.ISO8601TimeFormat, tStr)
 	if err != nil {
 		panic(fmt.Sprintf("time parsing during testing failed: %s", err))
