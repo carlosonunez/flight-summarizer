@@ -32,3 +32,23 @@ type FlightSummaryDateTimes struct {
 	// Actual are actual (realistic) times.
 	Actual *time.Time `json:"actual" yaml:"actual"`
 }
+
+// TimeZoneDBInfo is a time zone entry in a time zone database from
+// timezonedb.com
+type TimeZoneDBInfo struct {
+	// IsDaylightSavingsTime indicates whether DST applies for this entry.
+	IsDaylightSavingsTime int `csv:"dst"`
+	// ZoneName is the friendly name of the zone, like 'America/Houston'
+	// TimeStart is the time at which the Offset corresponding to this entry
+	// applies. This database has multiple time samples to properly account for
+	// daylight savings time.
+	TimeStart int32 `csv:"time_start"`
+	// UTCOffsetSeconds is the GMT/UTC offset, in seconds.
+	UTCOffsetSeconds int32  `csv:"gmt_offset"`
+	ZoneName         string `csv:"zone_name"`
+	// CountryCode is a two-char ID of the country the zone belongs to, like 'US'
+	CountryCode string `csv:"country_code"`
+	// Abbreviation is the timezone abbreviation for the zone at a given time,
+	// like 'CST'
+	Abbreviation string `csv:"abbreviation"`
+}

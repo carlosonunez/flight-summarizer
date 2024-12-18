@@ -1,6 +1,10 @@
 package types
 
-import "golang.org/x/net/html"
+import (
+	"time"
+
+	"golang.org/x/net/html"
+)
 
 // BrowserOpts let you provide custom options to a browser.
 type BrowserOpts map[string]interface{}
@@ -25,4 +29,13 @@ type Browser interface {
 type FlightSummarizer interface {
 	// Summarize does the thing!
 	Summarize(data []byte) (*FlightSummary, error)
+}
+
+// TimeZoneDatabase is a representation of a time zone database.
+type TimeZoneDatabase interface {
+	// Init initializes the database.
+	Init() error
+
+	// LookupUTCOffsetByID retrieves the UTC offset given a three-digit identifier
+	LookupUTCOffsetByID(ID string, start time.Time) (int64, error)
 }

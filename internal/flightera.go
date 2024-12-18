@@ -1,8 +1,10 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/antchfx/htmlquery"
 	"github.com/carlosonunez/flight-summarizer/types"
@@ -32,6 +34,10 @@ func flighteraGetOriginAirport(b types.Browser) (string, error) {
 
 func flighteraGetDestinationAirport(b types.Browser) (string, error) {
 	return matchAirportIATA(b, destinationAirport)
+}
+
+func flighteraGetScheduledDeparture(b types.Browser, db types.TimeZoneDatabase) (*time.Time, error) {
+	return nil, errors.New("WIP")
 }
 
 func matchAirportIATA(b types.Browser, t airportType) (string, error) {
