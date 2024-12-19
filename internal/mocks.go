@@ -37,3 +37,11 @@ func (b *MockBrowser) Visit(types.BrowserOpts) error {
 func (b *MockBrowser) Document() *html.Node {
 	return b.doc
 }
+
+func NewMockBrowser(flightCode string) (*MockBrowser, error) {
+	b := MockBrowser{}
+	if err := b.Init(flightCode); err != nil {
+		return &b, err
+	}
+	return &b, nil
+}
