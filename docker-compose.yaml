@@ -32,6 +32,7 @@ services:
     working_dir: /usr/local/go/src/project
     entrypoint: [ "go" ]
     environment:
+      - TEST_EXCLUDE
       - TEST_FILTER
       - CGO_ENABLED=0
       - GOOS=${GOOS:-linux}
@@ -41,7 +42,9 @@ services:
       - -failfast
       - ./...
       - -skip
-      - ${TEST_FILTER:-E2E}
+      - ${TEST_EXCLUDE:-E2E}
+      - -run
+      - ${TEST_FILTER:-.*}
   run:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
@@ -53,6 +56,7 @@ services:
     entrypoint: [ "go" ]
     environment:
       - TEST_FILTER
+      - TEST_EXCLUDE
       - CGO_ENABLED=0
       - GOOS=${GOOS:-linux}
       - GOARCH=${GOARCH:-arm64}
