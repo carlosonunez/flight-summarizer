@@ -2,17 +2,10 @@ package internal
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"path/filepath"
-	"testing"
-	"time"
 
 	"github.com/carlosonunez/flight-summarizer/testhelpers"
 	"github.com/carlosonunez/flight-summarizer/types"
-	"github.com/gocarina/gocsv"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/net/html"
 )
 

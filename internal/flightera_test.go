@@ -4,9 +4,19 @@ import (
 	"testing"
 
 	"github.com/carlosonunez/flight-summarizer/testhelpers"
+	"github.com/carlosonunez/flight-summarizer/timezonedb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestOriginAirport(t *testing.T) {
+	b := MockBrowser{}
+	err := b.Init("FAKE1")
+	require.NoError(t, err)
+	iata, err := flighteraGetOriginAirport(&b)
+	require.NoError(t, err)
+	assert.Equal(t, iata, "CLT")
+}
 
 func TestDestinationAirport(t *testing.T) {
 	b := MockBrowser{}
