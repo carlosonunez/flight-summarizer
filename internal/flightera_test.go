@@ -14,7 +14,7 @@ func TestOriginAirport(t *testing.T) {
 	require.NoError(t, err)
 	iata, err := flighteraGetOriginAirport(b)
 	require.NoError(t, err)
-	assert.Equal(t, iata, "CLT")
+	assert.Equal(t, "DFW", iata)
 }
 
 func TestDestinationAirport(t *testing.T) {
@@ -22,7 +22,7 @@ func TestDestinationAirport(t *testing.T) {
 	require.NoError(t, err)
 	iata, err := flighteraGetDestinationAirport(b)
 	require.NoError(t, err)
-	assert.Equal(t, iata, "TUL")
+	assert.Equal(t, "LGA", iata)
 }
 
 func TestOriginScheduledDepartureTime(t *testing.T) {
@@ -30,13 +30,8 @@ func TestOriginScheduledDepartureTime(t *testing.T) {
 	require.NoError(t, err)
 	tzdb, err := timezonedb.NewTimeZoneDBDotComDB(testhelpers.TIMEZONE_DB_FIXTURE_PATH)
 	require.NoError(t, err)
-	want := testhelpers.MustParseTime("2024-12-15T11:32:00-05:00")
-	got, err := flighteraGetScheduledDeparture(b, tzdb)
+	want := testhelpers.MustParseTime("2024-12-19T14:53:00-06:00 CST")
+	got, err := flighteraGetScheduledDeparture(b, tzdb, origin)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
-}
-
-// TODO: Finish this.
-func TestOriginScheduledDeparture(t *testing.T) {
-	t.Fail()
 }

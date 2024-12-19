@@ -16,7 +16,7 @@ type MockBrowser struct {
 func (b *MockBrowser) Init(fNum string) error {
 	var err error
 	testMap := map[string]string{
-		"FAKE1": "live_ontime_departure_early_arrival",
+		"FAKE1": "nojs/live_ontime_departure_early_arrival",
 	}
 	mock, ok := testMap[fNum]
 	if !ok {
