@@ -21,11 +21,15 @@ func TestOriginScheduledDepartureTime(t *testing.T) {
 	b := MockBrowser{}
 	err := b.Init("FAKE1")
 	require.NoError(t, err)
-	tzdb := MockTimeZoneDB{}
-	err = tzdb.Init()
+	tzdb, err := timezonedb.NewTimeZoneDBDotComDB(testhelpers.TIMEZONE_DB_FIXTURE_PATH)
 	require.NoError(t, err)
 	want := testhelpers.MustParseTime("2024-12-15T11:32:00-05:00")
-	got, err := flighteraGetScheduledDeparture(&b, &tzdb)
+	got, err := flighteraGetScheduledDeparture(&b, tzdb)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
+}
+
+// TODO: Finish this.
+func TestOriginScheduledDeparture(t *testing.T) {
+	t.Fail()
 }

@@ -44,32 +44,3 @@ func (b *MockBrowser) Visit(types.BrowserOpts) error {
 func (b *MockBrowser) Document() *html.Node {
 	return b.doc
 }
-
-func TestOriginAirport(t *testing.T) {
-	b := MockBrowser{}
-	err := b.Init("FAKE1")
-	require.NoError(t, err)
-	iata, err := flighteraGetOriginAirport(&b)
-	require.NoError(t, err)
-	assert.Equal(t, iata, "CLT")
-}
-
-type MockTimeZoneDB struct {
-	entries []*types.TimeZoneDBInfo
-}
-
-func (d *MockTimeZoneDB) Init() error {
-	if err := gocsv.Unmarshal(filepath.Join(testhelpers.FIXTURE_PATH, "timezonedb.csv"), &d.entries); err != nil {
-		return err
-	}
-	return nil
-}
-
-// 2024-12-18: TODO: The timezone DB has >124k entries in it; O(n) linear search
-// will be slow. At the same time, I don't want to use a separate database (that
-// I have to deploy and pay for.
-// Find an in-memory database thing that can read CSV or SQL dumps and use gosql
-// to query it.
-func (d *MockTimeZoneDB) LookupUTCOffsetByID(ID string, start time.Time) (int64, error) {
-	return 0, errors.New("not implemented yet")
-}

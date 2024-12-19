@@ -33,9 +33,6 @@ type FlightSummarizer interface {
 
 // TimeZoneDatabase is a representation of a time zone database.
 type TimeZoneDatabase interface {
-	// Init initializes the database.
-	Init() error
-
 	// LookupUTCOffsetByID retrieves the UTC offset given a three-digit identifier
 	LookupUTCOffsetByID(ID string, start time.Time) (int64, error)
 }

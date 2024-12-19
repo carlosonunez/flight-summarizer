@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/carlosonunez/flight-summarizer/types"
@@ -13,9 +12,14 @@ import (
 
 const FIXTURE_PATH = "../fixtures"
 
+var TIMEZONE_DB_FIXTURE_PATH = FixturePath("timezonedb.csv")
+
+func FixturePath(name string) string {
+	return filepath.Join(FIXTURE_PATH, name)
+}
+
 func LoadFixture(name string) ([]byte, error) {
-	path := filepath.Join(FIXTURE_PATH, strings.ReplaceAll(name, ".html", "")+".html")
-	return os.ReadFile(path)
+	return os.ReadFile(FixturePath(name))
 }
 
 func MustParseTime(tStr string) *time.Time {
