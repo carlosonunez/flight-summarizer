@@ -15,7 +15,12 @@ const FIXTURE_PATH = "../fixtures"
 var TIMEZONE_DB_FIXTURE_PATH = FixturePath("timezonedb.csv")
 
 func FixturePath(name string) string {
-	return filepath.Join(FIXTURE_PATH, name)
+	fp := filepath.Join(FIXTURE_PATH, name)
+	re := regexp.MustCompile("\\.[a-zA-Z0-9]+$")
+	if !re.Match([]byte(fp)) {
+		fp = fp + ".html"
+	}
+	return fp
 }
 
 func LoadFixture(name string) ([]byte, error) {
