@@ -17,6 +17,7 @@ func (b *MockBrowser) Init(fNum string) error {
 	var err error
 	testMap := map[string]string{
 		"FAKE1": "nojs/live_ontime_departure_early_arrival",
+		"FAKE2": "nojs/live_late_departure_early_arrival",
 	}
 	mock, ok := testMap[fNum]
 	if !ok {

@@ -12,18 +12,17 @@ import (
 )
 
 type flightSideType int64
+type datePartExtractType int64
+type dateExtractType int64
 
 const (
 	origin flightSideType = iota
 	destination
-)
-
-type dateExtractType int64
-
-const (
-	monthAndDay dateExtractType = iota
+	monthAndDay datePartExtractType = iota
 	localTZ
-	timeUTC
+	localTime
+	scheduled dateExtractType = iota
+	actual
 )
 
 func (t flightSideType) String() string {
@@ -46,6 +45,14 @@ func flighteraGetDestinationAirport(b types.Browser) (string, error) {
 }
 
 func flighteraGetScheduledDeparture(b types.Browser, db types.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
+	return flighteraGetTime(b, db, t, scheduled)
+}
+
+func flighteraGetActualDeparture(b types.Browser, db types.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
+	return flighteraGetTime(b, db, t, actual)
+}
+
+func flighteraGetTime(b types.Browser, db types.TimeZoneDatabase, t flightSideType, dt dateExtractType) (*time.Time, error) {
 	var idx int
 	switch t {
 	case origin:
@@ -65,55 +72,77 @@ func flighteraGetScheduledDeparture(b types.Browser, db types.TimeZoneDatabase, 
 	// dates.
 	year := time.Now().Year()
 	timeRaw := htmlquery.InnerText(nodes[idx].Parent)
-	monthAndDay, err := extractMonthDayFromRawTime(timeRaw)
+	monthAndDay, err := extractMonthDayFromRawTime(timeRaw, dt)
 	if err != nil {
 		return nil, err
 	}
-	localTZ, err := extractLocalTZFromRawTime(timeRaw)
+	localTZ, err := extractLocalTZFromRawTime(timeRaw, dt)
 	if err != nil {
 		return nil, err
 	}
-	timeUTC, err := extractTimeUTCFromRawTime(timeRaw)
+	localTime, err := extractLocalTimeFromRawTime(timeRaw, dt)
 	if err != nil {
 		return nil, err
 	}
-	timeParsed, err := time.Parse("02 Jan 2006 15:04 UTC", fmt.Sprintf("%s %d %s",
+	timeParsed, err := time.Parse("02 Jan 2006 15:04 UTC", fmt.Sprintf("%s %d %s UTC",
 		monthAndDay,
 		year,
-		timeUTC))
+		localTime))
 	if err != nil {
 		return nil, err
 	}
+	// IANA's timezone identifiers (which is what Go uses for time.Location) are
+	// incomplete. Given that we are fetching local time from these entries and
+	// are assuming UTC, we'll need to manually offset the time to make sure that
+	// it's correct.
 	offset, err := db.LookupUTCOffsetByID(localTZ, timeParsed)
 	if err != nil {
 		return nil, err
 	}
-	fixedTime := timeParsed.In(time.FixedZone(localTZ, int(offset)))
+	fixedTime := timeParsed.Add(-time.Duration(offset) * time.Second).In(time.FixedZone(localTZ, int(offset)))
 	fmt.Printf("parsed: %+v, fixed: %+v", timeParsed, fixedTime)
 	return &fixedTime, nil
 }
 
-func extractMonthDayFromRawTime(text string) (string, error) {
-	return extractFromRawTime(text, monthAndDay)
+func extractMonthDayFromRawTime(text string, dt dateExtractType) (string, error) {
+	return extractFromRawTime(text, monthAndDay, dt)
 }
 
-func extractLocalTZFromRawTime(text string) (string, error) {
-	return extractFromRawTime(text, localTZ)
+func extractLocalTZFromRawTime(text string, dt dateExtractType) (string, error) {
+	return extractFromRawTime(text, localTZ, dt)
 }
 
-func extractTimeUTCFromRawTime(text string) (string, error) {
-	return extractFromRawTime(text, timeUTC)
+func extractLocalTimeFromRawTime(text string, dt dateExtractType) (string, error) {
+	return extractFromRawTime(text, localTime, dt)
 }
 
-func extractFromRawTime(text string, t dateExtractType) (string, error) {
+func stripJunkFromRawTime(text string) []string {
+	re := regexp.MustCompile("([0-9]{1,2} [A-Za-z]+ [0-9]{2}:[0-9]{2}|[A-Z]{3}|[0-9]{2}:[0-9]{2} [A-Z]{3})")
+	return re.FindAllString(text, -1)
+}
+
+func extractFromRawTime(text string, t datePartExtractType, dt dateExtractType) (string, error) {
 	var pattern string
+	var wantIndex int
+	var scheduleDriftDetected, considerScheduleDrifts, seen bool
+	timeParts := stripJunkFromRawTime(text)
+	if len(timeParts) > 3 {
+		scheduleDriftDetected = true
+	}
 	switch t {
 	case monthAndDay:
 		pattern = "[0-9]{1,2} [A-Za-z]{3}"
+		if dt == scheduled {
+			considerScheduleDrifts = true
+		}
 	case localTZ:
-		pattern = ".*([A-Z]{3})$"
-	case timeUTC:
-		pattern = "(.*) UTC$"
+		pattern = "^([A-Z]{3})$"
+	case localTime:
+		wantIndex = 1
+		pattern = "[0-9]{1,2} [A-Za-z]{3} ([0-9]{2}:[0-9]{2})"
+		if dt == scheduled {
+			considerScheduleDrifts = true
+		}
 	default:
 		return "", fmt.Errorf("invalid date extract type: %d", t)
 	}
@@ -121,9 +150,16 @@ func extractFromRawTime(text string, t dateExtractType) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for _, line := range strings.Split(text, "\n") {
+	for _, line := range timeParts {
 		if re.Match([]byte(line)) {
-			return strings.TrimSpace(re.FindAllString(line, -1)[0]), nil
+			found := strings.TrimSpace(re.FindAllStringSubmatch(line, -1)[0][wantIndex])
+			if !considerScheduleDrifts || (considerScheduleDrifts && !scheduleDriftDetected) {
+				return found, nil
+			}
+			if scheduleDriftDetected && seen {
+				return found, nil
+			}
+			seen = true
 		}
 	}
 	return "", fmt.Errorf("no time fragment found that matches expr '%s'", pattern)
