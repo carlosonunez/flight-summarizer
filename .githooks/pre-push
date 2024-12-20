@@ -9,6 +9,7 @@ ensure_no_barking() {
 continue the push:
 
 $(echo "$results" | sed -E 's/^/- /')"
+  return 1
 }
 
 ensure_no_barking
