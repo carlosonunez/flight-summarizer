@@ -100,7 +100,6 @@ func flighteraGetTime(b types.Browser, db types.TimeZoneDatabase, t flightSideTy
 		return nil, err
 	}
 	fixedTime := timeParsed.Add(-time.Duration(offset) * time.Second).In(time.FixedZone(localTZ, int(offset)))
-	fmt.Printf("parsed: %+v, fixed: %+v", timeParsed, fixedTime)
 	return &fixedTime, nil
 }
 

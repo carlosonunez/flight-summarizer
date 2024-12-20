@@ -9,20 +9,23 @@ import (
 	"golang.org/x/net/html"
 )
 
+const (
+	LiveOnTimeDepartureEarlyArrival testScenario = iota
+	LiveLateDepartureEarlyArrival
+)
+
+var testScenarioMap map[testScenario]string = map[testScenario]string{
+	LiveOnTimeDepartureEarlyArrival: "nojs/live_ontime_departure_early_arrival",
+	LiveLateDepartureEarlyArrival:   "nojs/live_late_departure_early_arrival",
+}
+
+type testScenario int64
+
 type MockBrowser struct {
 	doc *html.Node
 }
 
-func (b *MockBrowser) Init(fNum string) error {
-	var err error
-	testMap := map[string]string{
-		"FAKE1": "nojs/live_ontime_departure_early_arrival",
-		"FAKE2": "nojs/live_late_departure_early_arrival",
-	}
-	mock, ok := testMap[fNum]
-	if !ok {
-		panic(fmt.Sprintf("invalid flightera test case: %s", fNum))
-	}
+func (b *MockBrowser) Init(mock string) error {
 	data, err := testhelpers.LoadFixture(mock)
 	if err != nil {
 		return err
@@ -39,9 +42,13 @@ func (b *MockBrowser) Document() *html.Node {
 	return b.doc
 }
 
-func NewMockBrowser(flightCode string) (*MockBrowser, error) {
+func NewMockBrowser(scenario testScenario) (*MockBrowser, error) {
 	b := MockBrowser{}
-	if err := b.Init(flightCode); err != nil {
+	mock, ok := testScenarioMap[scenario]
+	if !ok {
+		return &b, fmt.Errorf("no test scenario found that matches ID: %d", scenario)
+	}
+	if err := b.Init(mock); err != nil {
 		return &b, err
 	}
 	return &b, nil
