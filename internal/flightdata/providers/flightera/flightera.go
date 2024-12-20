@@ -1,4 +1,4 @@
-package internal
+package flightera
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/antchfx/htmlquery"
-	"github.com/carlosonunez/flight-summarizer/types"
+	"github.com/carlosonunez/flight-summarizer/pkg/browser"
+	"github.com/carlosonunez/flight-summarizer/pkg/timezone"
 	"golang.org/x/net/html"
 )
 
@@ -36,23 +37,23 @@ func (t flightSideType) String() string {
 	}
 }
 
-func flighteraGetOriginAirport(b types.Browser) (string, error) {
+func flighteraGetOriginAirport(b browser.Browser) (string, error) {
 	return matchAirportIATA(b, origin)
 }
 
-func flighteraGetDestinationAirport(b types.Browser) (string, error) {
+func flighteraGetDestinationAirport(b browser.Browser) (string, error) {
 	return matchAirportIATA(b, destination)
 }
 
-func flighteraGetScheduledDeparture(b types.Browser, db types.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
+func flighteraGetScheduledDeparture(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
 	return flighteraGetTime(b, db, t, scheduled)
 }
 
-func flighteraGetActualDeparture(b types.Browser, db types.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
+func flighteraGetActualDeparture(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
 	return flighteraGetTime(b, db, t, actual)
 }
 
-func flighteraGetTime(b types.Browser, db types.TimeZoneDatabase, t flightSideType, dt dateExtractType) (*time.Time, error) {
+func flighteraGetTime(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType, dt dateExtractType) (*time.Time, error) {
 	var idx int
 	switch t {
 	case origin:
@@ -164,7 +165,7 @@ func extractFromRawTime(text string, t datePartExtractType, dt dateExtractType) 
 	return "", fmt.Errorf("no time fragment found that matches expr '%s'", pattern)
 }
 
-func matchAirportIATA(b types.Browser, t flightSideType) (string, error) {
+func matchAirportIATA(b browser.Browser, t flightSideType) (string, error) {
 	var result string
 	var query string
 	switch t {
@@ -182,7 +183,7 @@ func matchAirportIATA(b types.Browser, t flightSideType) (string, error) {
 	return found[0], nil
 }
 
-func getNodesOnPage(b types.Browser, query string) ([]*html.Node, error) {
+func getNodesOnPage(b browser.Browser, query string) ([]*html.Node, error) {
 	found, err := htmlquery.QueryAll(b.Document(), query)
 	if err != nil {
 		return found, nil
@@ -193,11 +194,11 @@ func getNodesOnPage(b types.Browser, query string) ([]*html.Node, error) {
 	return found, nil
 }
 
-func getTextOnPage(b types.Browser, query string) ([]string, error) {
+func getTextOnPage(b browser.Browser, query string) ([]string, error) {
 	return getTextOnPageRegexp(b, query, "")
 }
 
-func getTextOnPageRegexp(b types.Browser, query string, pattern string) ([]string, error) {
+func getTextOnPageRegexp(b browser.Browser, query string, pattern string) ([]string, error) {
 	var results []string
 	found, err := getNodesOnPage(b, query)
 	if err != nil {

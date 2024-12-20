@@ -1,6 +1,8 @@
 package timezonedb
 
 import (
+	"bytes"
+	"embed"
 	"fmt"
 	"os"
 	"time"
@@ -8,6 +10,9 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/hashicorp/go-memdb"
 )
+
+//go:embed fixtures
+var mockedTimeZoneData embed.FS
 
 var DB_TABLE_NAME = "timezone_data"
 
@@ -37,11 +42,12 @@ type TimeZoneDBDotComEntry struct {
 // TimeZoneDBDotComDB is a TimeZoneDatabase built from CSV dumps downloaded
 // from timezonedb.com.
 type TimeZoneDBDotComDB struct {
-	csvFile string
-	entries []*TimeZoneDBDotComEntry
-	db      *memdb.MemDB
+	contents []byte
+	entries  []*TimeZoneDBDotComEntry
+	db       *memdb.MemDB
 }
 
+// LookupUTCOffsetByID looks up a UTC offset given a timezone ID, like "CST".
 func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (int64, error) {
 	txn := db.db.Txn(false)
 	defer txn.Abort()
@@ -60,8 +66,34 @@ func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (i
 	return 0, fmt.Errorf("start time for time zone ID '%s' is too early", ID)
 }
 
+// NewTimeZoneDBDotComDB creates a new in-memory timezone database.
 func NewTimeZoneDBDotComDB(csvFile string) (*TimeZoneDBDotComDB, error) {
-	db := TimeZoneDBDotComDB{csvFile: csvFile}
+	return newTZDCDB(csvFile, false)
+}
+
+// NewMockTimeZoneDBDotComDB creates a new in-memory timezone database using
+// a snippet of entries from timezonedb.com. Useful for writing new flight
+// summarizers.
+//
+// Time zones included:
+//
+// - CST
+func NewMockTimeZoneDBDotComDB() (*TimeZoneDBDotComDB, error) {
+	return newTZDCDB("fixtures/timezonedb.csv", true)
+}
+
+func newTZDCDB(fp string, useEmbed bool) (*TimeZoneDBDotComDB, error) {
+	var b []byte
+	var err error
+	if useEmbed {
+		b, err = mockedTimeZoneData.ReadFile(fp)
+	} else {
+		b, err = os.ReadFile(fp)
+	}
+	if err != nil {
+		return nil, err
+	}
+	db := TimeZoneDBDotComDB{contents: b}
 	if err := newInMemoryDB(&db); err != nil {
 		return &db, err
 	}
@@ -74,13 +106,7 @@ func NewTimeZoneDBDotComDB(csvFile string) (*TimeZoneDBDotComDB, error) {
 func populateDB(db *TimeZoneDBDotComDB) error {
 	// Ensure that tz entries are cleared to save memory.
 	defer func() { db.entries = nil }()
-	f, err := os.OpenFile(db.csvFile, os.O_RDONLY, os.ModeType)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	if err := gocsv.UnmarshalFile(f, &db.entries); err != nil {
+	if err := gocsv.Unmarshal(bytes.NewReader(db.contents), &db.entries); err != nil {
 		return err
 	}
 	txn := db.db.Txn(true)

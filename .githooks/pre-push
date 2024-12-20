@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xeo pipefail
+set -eo pipefail
 
 ensure_no_barking() {
   if git log -1 --format=%s | grep -E '^\[has-barks\]'

@@ -1,11 +1,11 @@
-package internal
+package flightera
 
 import (
 	"bytes"
 	"fmt"
+	"os"
 
-	"github.com/carlosonunez/flight-summarizer/testhelpers"
-	"github.com/carlosonunez/flight-summarizer/types"
+	"github.com/carlosonunez/flight-summarizer/pkg/browser"
 	"golang.org/x/net/html"
 )
 
@@ -15,8 +15,8 @@ const (
 )
 
 var testScenarioMap map[testScenario]string = map[testScenario]string{
-	LiveOnTimeDepartureEarlyArrival: "nojs/live_ontime_departure_early_arrival",
-	LiveLateDepartureEarlyArrival:   "nojs/live_late_departure_early_arrival",
+	LiveOnTimeDepartureEarlyArrival: "fixtures/nojs/live_ontime_departure_early_arrival",
+	LiveLateDepartureEarlyArrival:   "fixtures/nojs/live_late_departure_early_arrival",
 }
 
 type testScenario int64
@@ -26,7 +26,7 @@ type MockBrowser struct {
 }
 
 func (b *MockBrowser) Init(mock string) error {
-	data, err := testhelpers.LoadFixture(mock)
+	data, err := os.ReadFile(mock + ".html")
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (b *MockBrowser) Init(mock string) error {
 	return err
 }
 
-func (b *MockBrowser) Visit(types.BrowserOpts) error {
+func (b *MockBrowser) Visit(browser.BrowserOpts) error {
 	return nil
 }
 

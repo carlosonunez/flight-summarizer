@@ -1,35 +1,29 @@
-package testhelpers
+package summarizer
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 
-	"github.com/carlosonunez/flight-summarizer/types"
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 const TESTS_YAML_FILE = "../tests.yaml"
 
 type TestCase struct {
-	Want           *types.FlightSummary `yaml:"want"`
-	flightStatuses *testCaseStatuses    `yaml:"statuses"`
+	Want           *FlightSummary    `yaml:"want"`
+	flightStatuses *testCaseStatuses `yaml:"statuses"`
 	fixture        []byte
-}
-
-func (c *TestCase) LoadFixtureForTestCase() ([]byte, error) {
-	fp := fmt.Sprintf("%s_departure_%s_arrival",
-		*c.flightStatuses.DepartureStatus,
-		*c.flightStatuses.ArrivalStatus)
-	return LoadFixture(fp)
 }
 
 type TestCaseFile struct {
 	LiveFlights []*TestCase `yaml:"live_flights"`
 }
 
-func LoadTestCases() (*TestCaseFile, error) {
+func LoadTestCases(fixturePath string) (*TestCaseFile, error) {
 	var cs TestCaseFile
-	d, err := os.ReadFile(TESTS_YAML_FILE)
+	d, err := os.ReadFile(SummarizerTestFixturePath(fixturePath))
 	if err != nil {
 		return nil, err
 	}
@@ -65,4 +59,27 @@ type testCaseStatuses struct {
 	flightStatus    *flightStatus         `yaml:"flight"`
 	DepartureStatus *flightScheduleStatus `yaml:"departure"`
 	ArrivalStatus   *flightScheduleStatus `yaml:"arrival"`
+}
+
+const FIXTURE_PATH = "../fixtures"
+
+func SummarizerTestFixturePath(name string) string {
+	fp := filepath.Join(FIXTURE_PATH, name)
+	re := regexp.MustCompile("\\.[a-zA-Z0-9]+$")
+	if !re.Match([]byte(fp)) {
+		fp = fp + ".html"
+	}
+	return fp
+}
+
+func LoadFixture(name string) ([]byte, error) {
+	return os.ReadFile(SummarizerTestFixturePath(name))
+}
+
+func matchRegexpDuringUnmarshal(pattern string, data []byte) error {
+	re := regexp.MustCompile(pattern)
+	if !re.Match(data) {
+		return fmt.Errorf("%s doesn't match wanted pattern '%s'", data, pattern)
+	}
+	return nil
 }
