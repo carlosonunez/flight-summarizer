@@ -1,6 +1,7 @@
 package flightera
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/carlosonunez/flight-summarizer/internal/timezone/providers/timezonedb"
@@ -54,6 +55,14 @@ func TestDestinationActualDepartureTime(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)
 	assert.Equal(t, actual, got)
+}
+
+func TestFlighteraURLJustFlightNumber(t *testing.T) {
+	want, err := url.Parse("https://flightera.net/en/flight/FAKE1")
+	require.NoError(t, err)
+	got, err := flighteraURL("FAKE1")
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
 }
 
 func init() {

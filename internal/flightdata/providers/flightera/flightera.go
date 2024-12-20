@@ -2,6 +2,7 @@ package flightera
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -207,4 +208,14 @@ func getTextOnPageRegexp(b browser.Browser, query string, pattern string) ([]str
 	re := regexp.MustCompile(pattern)
 	results = re.FindAllString(htmlquery.InnerText(found[0]), -1)
 	return results, nil
+}
+
+func flighteraURL(flightNumOrURL string) (*url.URL, error) {
+	urlStr := "https://flightera.net/en"
+	if strings.Contains(flightNumOrURL, "/") {
+		urlStr = urlStr + "/flight_details/" + flightNumOrURL
+	} else {
+		urlStr = urlStr + "/flight/" + flightNumOrURL
+	}
+	return url.Parse(urlStr)
 }
