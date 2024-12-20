@@ -13,6 +13,16 @@ type FlighteraFlightSummarizer struct{}
 
 // Summarize does the summarization.
 func (s *FlighteraFlightSummarizer) Summarize(b browser.Browser) (*summarizer.FlightSummary, error) {
+	summary := summarizer.FlightSummary{}
+	originAirport, err := flighteraGetOriginAirport(b)
+	if err != nil {
+		return summary, error
+	}
+	destAirport, err := flighteraGetDestinationAirport(b)
+	if err != nil {
+		return summary, error
+	}
+	summary.FlightNumber = "WIP"
 	return nil, errors.New("WIP")
 }
 
