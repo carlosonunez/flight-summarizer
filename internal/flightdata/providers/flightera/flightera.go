@@ -38,6 +38,16 @@ func (t flightSideType) String() string {
 	}
 }
 
+// GetFlightNumber gets the flight number from the Flightera session.
+func GetFlightNumber(b browser.Browser) (string, error) {
+	strs, err := getTextOnPage(b, "//h1")
+	if err != nil {
+		return "", err
+	}
+	re := regexp.MustCompile("([A-Z]{3,}[0-9]{1,4})")
+	return re.FindAllStringSubmatch(strs[0], -1)[0][0], nil
+}
+
 // GetOriginAirport retrieves the origin airport from a Flightera session.
 func GetOriginAirport(b browser.Browser) (string, error) {
 	return matchAirportIATA(b, origin)
@@ -230,6 +240,12 @@ func getTextOnPageRegexp(b browser.Browser, query string, pattern string) ([]str
 	found, err := getNodesOnPage(b, query)
 	if err != nil {
 		return results, err
+	}
+	if len(pattern) == 0 {
+		for _, n := range found {
+			results = append(results, htmlquery.InnerText(n))
+		}
+		return results, nil
 	}
 	re := regexp.MustCompile(pattern)
 	results = re.FindAllString(htmlquery.InnerText(found[0]), -1)

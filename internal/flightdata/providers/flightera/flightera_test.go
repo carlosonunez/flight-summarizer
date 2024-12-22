@@ -43,7 +43,7 @@ func TestOriginActualDepartureTime(t *testing.T) {
 
 func TestDestinationScheduledDepartureTime(t *testing.T) {
 	want := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := GetDestinationScheduledDepartureTime(browserLiveLateEarly, tzdb)
+	got, err := GetDestinationScheduledLandingTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
@@ -51,10 +51,17 @@ func TestDestinationScheduledDepartureTime(t *testing.T) {
 func TestDestinationActualDepartureTime(t *testing.T) {
 	actual := timezone.MustParseISO8601Time("2024-12-19T15:10:00-06:00 CST")
 	scheduled := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := GetDestinationActualDepartureTime(browserLiveLateEarly, tzdb)
+	got, err := GetDestinationActualLandingTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)
 	assert.Equal(t, actual, got)
+}
+
+func TestFlighteraFlightNumber(t *testing.T) {
+	want := "AAL5005"
+	got, err := GetFlightNumber(browserLiveLateEarly)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
 }
 
 func TestFlighteraURLJustFlightNumber(t *testing.T) {
