@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 )
 
-const defaultTZDBDCCSVFilePath = "/tmp/timezonedb.csv"
+const defaultTZDBDCCSVFilePath = "/data/timezonedb.csv"
 
 var DB_TABLE_NAME = "timezone_data"
 
@@ -83,7 +83,7 @@ func (f *defaultCSVReader) ReadFile(fp string) ([]byte, error) {
 }
 
 var DEFAULT_OPTIONS = &TimeZoneDBDotComDBOptions{
-	CSVFile: "/tmp/timezonedb.csv",
+	CSVFile: defaultTZDBDCCSVFilePath,
 }
 
 // NewTimeZoneDBDotComDB creates a new in-memory timezone database.
