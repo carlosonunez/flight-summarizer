@@ -38,12 +38,38 @@ func (t flightSideType) String() string {
 	}
 }
 
-func flighteraGetOriginAirport(b browser.Browser) (string, error) {
+// GetOriginAirport retrieves the origin airport from a Flightera session.
+func GetOriginAirport(b browser.Browser) (string, error) {
 	return matchAirportIATA(b, origin)
 }
 
-func flighteraGetDestinationAirport(b browser.Browser) (string, error) {
+// GetDestinationAirport retrieves the origin airport from a Flightera session.
+func GetDestinationAirport(b browser.Browser) (string, error) {
 	return matchAirportIATA(b, destination)
+}
+
+// GetOriginScheduledDepartureTime gets the scheduled departure time at the
+// origin.
+func GetOriginScheduledDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetScheduledDeparture(b, db, origin)
+}
+
+// GetOriginActualDepartureTime gets the scheduled departure time at the
+// origin.
+func GetOriginActualDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetActualDeparture(b, db, origin)
+}
+
+// GetDestinationScheduledDepartureTime gets the scheduled departure time at the
+// origin.
+func GetDestinationScheduledDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetScheduledDeparture(b, db, origin)
+}
+
+// GetDestinationActualDepartureTime gets the scheduled departure time at the
+// origin.
+func GetDestinationActualDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetActualDeparture(b, db, origin)
 }
 
 func flighteraGetScheduledDeparture(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType) (*time.Time, error) {

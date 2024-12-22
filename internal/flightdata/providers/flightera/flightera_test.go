@@ -14,20 +14,20 @@ var tzdb *timezonedb.TimeZoneDBDotComDB
 var browserLiveOnTimeEarly, browserLiveLateEarly *MockBrowser
 
 func TestOriginAirport(t *testing.T) {
-	iata, err := flighteraGetOriginAirport(browserLiveOnTimeEarly)
+	iata, err := GetOriginAirport(browserLiveOnTimeEarly)
 	require.NoError(t, err)
 	assert.Equal(t, "DFW", iata)
 }
 
 func TestDestinationAirport(t *testing.T) {
-	iata, err := flighteraGetDestinationAirport(browserLiveOnTimeEarly)
+	iata, err := GetDestinationAirport(browserLiveOnTimeEarly)
 	require.NoError(t, err)
 	assert.Equal(t, "LGA", iata)
 }
 
 func TestOriginScheduledDepartureTime(t *testing.T) {
 	want := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := flighteraGetScheduledDeparture(browserLiveLateEarly, tzdb, origin)
+	got, err := GetOriginScheduledDepartureTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
@@ -35,7 +35,7 @@ func TestOriginScheduledDepartureTime(t *testing.T) {
 func TestOriginActualDepartureTime(t *testing.T) {
 	actual := timezone.MustParseISO8601Time("2024-12-19T15:10:00-06:00 CST")
 	scheduled := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := flighteraGetActualDeparture(browserLiveLateEarly, tzdb, origin)
+	got, err := GetOriginActualDepartureTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)
 	assert.Equal(t, actual, got)
@@ -43,7 +43,7 @@ func TestOriginActualDepartureTime(t *testing.T) {
 
 func TestDestinationScheduledDepartureTime(t *testing.T) {
 	want := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := flighteraGetScheduledDeparture(browserLiveLateEarly, tzdb, origin)
+	got, err := GetDestinationScheduledDepartureTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
@@ -51,7 +51,7 @@ func TestDestinationScheduledDepartureTime(t *testing.T) {
 func TestDestinationActualDepartureTime(t *testing.T) {
 	actual := timezone.MustParseISO8601Time("2024-12-19T15:10:00-06:00 CST")
 	scheduled := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
-	got, err := flighteraGetActualDeparture(browserLiveLateEarly, tzdb, origin)
+	got, err := GetDestinationActualDepartureTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)
 	assert.Equal(t, actual, got)
