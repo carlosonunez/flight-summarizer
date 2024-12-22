@@ -19,3 +19,15 @@ func TestTimeZoneDBDotComFromCSV(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, wantOffset, gotOffset)
 }
+
+func TestTimeZoneDBDotComFromCSVEST(t *testing.T) {
+	db, err := NewTimeZoneDBDotComDB(&TimeZoneDBDotComDBOptions{
+		CSVFile: "fixtures/timezonedb.csv",
+	})
+	require.NoError(t, err)
+	exampleTime := time.Unix(1383458400, 0)
+	wantOffset := int64(-21600) // -0600
+	gotOffset, err := db.LookupUTCOffsetByID("EST", exampleTime)
+	require.NoError(t, err)
+	assert.Equal(t, wantOffset, gotOffset)
+}

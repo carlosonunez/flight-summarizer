@@ -26,7 +26,7 @@ type TimeZoneDBDotComDBOptions struct {
 // timezonedb.com
 type TimeZoneDBDotComEntry struct {
 	// ID is a unique nonce used as an index.
-	ID int64
+	ID int64 `csv:"id"`
 
 	// IsDaylightSavingsTime indicates whether DST applies for this entry.
 	IsDaylightSavingsTime int `csv:"dst"`
@@ -58,7 +58,7 @@ func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (i
 	txn := db.db.Txn(false)
 	defer txn.Abort()
 
-	it, err := txn.Get(DB_TABLE_NAME, "abbreviation", ID)
+	it, err := txn.GetReverse(DB_TABLE_NAME, "id")
 	if err != nil {
 		return 0, err
 	}
@@ -69,7 +69,7 @@ func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (i
 		}
 	}
 
-	return 0, fmt.Errorf("start time for time zone ID '%s' is too early", ID)
+	return 0, fmt.Errorf("start time '%d' for time zone ID '%s' is too early", start.Unix(), ID)
 }
 
 type csvReader interface {
@@ -103,6 +103,28 @@ func NewTimeZoneDBDotComDB(opts *TimeZoneDBDotComDBOptions) (*TimeZoneDBDotComDB
 	return &db, nil
 }
 
+func newInMemoryDB(db *TimeZoneDBDotComDB) error {
+	var err error
+	db.db, err = memdb.NewMemDB(&memdb.DBSchema{
+		Tables: map[string]*memdb.TableSchema{
+			DB_TABLE_NAME: {
+				Name: "timezone_data",
+				Indexes: map[string]*memdb.IndexSchema{
+					"id": {
+						Name:    "id",
+						Unique:  true,
+						Indexer: &memdb.IntFieldIndex{Field: "ID"},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func populateDB(db *TimeZoneDBDotComDB) error {
 	// Ensure that tz entries are cleared to save memory.
 	defer func() { db.entries = nil }()
@@ -116,35 +138,5 @@ func populateDB(db *TimeZoneDBDotComDB) error {
 		}
 	}
 	txn.Commit()
-	return nil
-}
-
-func newInMemoryDB(db *TimeZoneDBDotComDB) error {
-	var err error
-	db.db, err = memdb.NewMemDB(&memdb.DBSchema{
-		Tables: map[string]*memdb.TableSchema{
-			DB_TABLE_NAME: {
-				Name: "timezone_data",
-				Indexes: map[string]*memdb.IndexSchema{
-					"id": {
-						Name:    "id",
-						Unique:  true,
-						Indexer: &memdb.StringFieldIndex{Field: "ID"},
-					},
-					"abbreviation": {
-						Name:    "abbreviation",
-						Indexer: &memdb.StringFieldIndex{Field: "Abbreviation"},
-					},
-					"time_start": {
-						Name:    "time_start",
-						Indexer: &memdb.StringFieldIndex{Field: "TimeStart"},
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return err
-	}
 	return nil
 }
