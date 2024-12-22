@@ -2,7 +2,6 @@ package timezonedb
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"os"
 	"time"
@@ -11,10 +10,17 @@ import (
 	"github.com/hashicorp/go-memdb"
 )
 
-//go:embed fixtures
-var mockedTimeZoneData embed.FS
+const defaultTZDBDCCSVFilePath = "/tmp/timezonedb.csv"
 
 var DB_TABLE_NAME = "timezone_data"
+
+// TimeZoneDBDotComDBOptions configures how timezonedb.com databases are
+// initialized. See DEFAULT_OPTIONS to view defaults.
+type TimeZoneDBDotComDBOptions struct {
+	// CSVFile changes the CSV file from which timezonedb.com databases will be
+	// populated.
+	CSVFile string
+}
 
 // TimeZoneDBDotComEntry is a time zone entry in a time zone database from
 // timezonedb.com
@@ -66,31 +72,25 @@ func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (i
 	return 0, fmt.Errorf("start time for time zone ID '%s' is too early", ID)
 }
 
+type csvReader interface {
+	ReadFile(string) ([]byte, error)
+}
+
+type defaultCSVReader struct{}
+
+func (f *defaultCSVReader) ReadFile(fp string) ([]byte, error) {
+	return os.ReadFile(fp)
+}
+
+var DEFAULT_OPTIONS = &TimeZoneDBDotComDBOptions{
+	CSVFile: "/tmp/timezonedb.csv",
+}
+
 // NewTimeZoneDBDotComDB creates a new in-memory timezone database.
-func NewTimeZoneDBDotComDB(csvFile string) (*TimeZoneDBDotComDB, error) {
-	return newTZDCDB(csvFile, false)
-}
-
-// NewMockTimeZoneDBDotComDB creates a new in-memory timezone database using
-// a snippet of entries from timezonedb.com. Useful for writing new flight
-// summarizers.
-//
-// Time zones included:
-//
-// - CST
-func NewMockTimeZoneDBDotComDB() (*TimeZoneDBDotComDB, error) {
-	return newTZDCDB("fixtures/timezonedb.csv", true)
-}
-
-func newTZDCDB(fp string, useEmbed bool) (*TimeZoneDBDotComDB, error) {
+func NewTimeZoneDBDotComDB(opts *TimeZoneDBDotComDBOptions) (*TimeZoneDBDotComDB, error) {
 	var b []byte
 	var err error
-	if useEmbed {
-		b, err = mockedTimeZoneData.ReadFile(fp)
-	} else {
-		b, err = os.ReadFile(fp)
-	}
-	if err != nil {
+	if b, err = os.ReadFile(opts.CSVFile); err != nil {
 		return nil, err
 	}
 	db := TimeZoneDBDotComDB{contents: b}

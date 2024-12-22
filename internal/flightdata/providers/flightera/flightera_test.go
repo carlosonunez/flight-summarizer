@@ -75,7 +75,9 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	tzdb, err = timezonedb.NewMockTimeZoneDBDotComDB()
+	tzdb, err = timezonedb.NewTimeZoneDBDotComDB(&timezonedb.TimeZoneDBDotComDBOptions{
+		CSVFile: "fixtures/timezonedb.csv",
+	})
 	if err != nil {
 		panic(err)
 	}
