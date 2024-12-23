@@ -46,7 +46,6 @@ func testTimes(t *testing.T, want *time.Time, got *time.Time, format string, par
 	// We're going to do string-based equality to work around this.
 	wantStr := want.Format(time.RFC3339)
 	gotStr := want.Format(time.RFC3339)
-	fmt.Printf("===> comparing '%s' with '%s'\n", wantStr, gotStr)
 	assert.Equal(t, wantStr, gotStr, fmt.Sprintf(format, parts...))
 }
 
