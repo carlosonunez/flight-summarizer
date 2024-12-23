@@ -9,7 +9,35 @@ import (
 
 	"github.com/carlosonunez/flight-summarizer/internal/summarizers"
 	"github.com/carlosonunez/flight-summarizer/pkg/summarizer"
+	log "github.com/sirupsen/logrus"
 )
+
+const (
+	defaultPort8080               int    = 8080
+	defaultListenAddressLocalhost string = "127.0.0.1"
+)
+
+// ServerOptions are options to provide to the server.
+type ServerOptions struct {
+	// Port is the port to bind the summarizer server to (default: 8080)
+	Port int
+
+	// ListenAddress specifies the IP address to bind the summarizer to (default:
+	// 127.0.0.1)
+	ListenAddress string
+}
+
+type muxHandler interface {
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
+}
+
+type handler struct {
+	fn func(http.ResponseWriter, *http.Request)
+}
+
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.fn(w, r)
+}
 
 // SummarizerServerOptions describes options available for creating summarizer
 // servers.
@@ -19,6 +47,22 @@ type SummarizerServerOptions struct {
 
 	// FlightNumber is the flight number or flight number hint to retrieve a summary for.
 	FlightNumber string
+}
+
+// Start starts a new blocking summarizer HTTP server
+func Start(opts *ServerOptions) error {
+	if opts.Port == 0 {
+		log.Warningf("No port provided to the summarizer server; using default port %d", defaultPort8080)
+		opts.Port = defaultPort8080
+	}
+	if opts.ListenAddress == "" {
+		log.Warning("No listen address provided; listening on localhost only (external connections might not work)")
+		opts.ListenAddress = defaultListenAddressLocalhost
+	}
+	mux := http.NewServeMux()
+	mux.Handle("/summarize", &handler{fn: summarizeHandler})
+	http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListenAddress, opts.Port), mux)
+	return nil
 }
 
 func summarizeHandler(w http.ResponseWriter, r *http.Request) {
