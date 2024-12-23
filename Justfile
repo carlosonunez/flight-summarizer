@@ -25,4 +25,4 @@ _docker_compose *ARGS:
     >&2 echo "ERROR: Docker Compose CLI plugin not found; please install it"
     exit 1
   fi
-  docker compose {{ARGS}}
+  docker-compose --log-level ERROR {{ARGS}}
