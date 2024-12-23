@@ -33,22 +33,39 @@ func summarizeHandler(w http.ResponseWriter, r *http.Request) {
 	opts := summarizer.FlightSummarizerOptions{
 		FlightNumber: flightNumber,
 	}
-	if err := s.Init(&opts); err != nil {
+	if err := initSummarizer(s, &opts, w); err != nil {
 		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 		return
 	}
-	summary, err := s.Summarize()
-	if err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
-		return
-	}
-	resp, err := json.Marshal(summary)
+	resp, err := summarize(s, w)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, string(resp))
+}
+
+func summarize(s summarizer.FlightSummarizer, w http.ResponseWriter) ([]byte, error) {
+	summary, err := s.Summarize()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+		return []byte{}, err
+	}
+	resp, err := json.Marshal(summary)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+		return []byte{}, err
+	}
+	return resp, nil
+}
+
+func initSummarizer(s summarizer.FlightSummarizer, opts *summarizer.FlightSummarizerOptions, w http.ResponseWriter) error {
+	if err := s.Init(opts); err != nil {
+		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+		return err
+	}
+	return nil
 }
 
 func lookupSummarizer(w http.ResponseWriter, r *http.Request) (summarizer.FlightSummarizer, error) {
