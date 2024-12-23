@@ -40,3 +40,12 @@ type FlightSummaryDateTimes struct {
 	// Actual are actual (realistic) times.
 	Actual *time.Time `json:"actual" yaml:"actual"`
 }
+
+// NewEmptyFlightSummary creates an empty flight summary (so that the summarizer
+// doesn't have to type out this ugly struct initializer themselves)
+func NewEmptyFlightSummary() *FlightSummary {
+	return &FlightSummary{
+		Origin:      &Point{Times: &FlightSummaryDateTimes{}},
+		Destination: &Point{Times: &FlightSummaryDateTimes{}},
+	}
+}
