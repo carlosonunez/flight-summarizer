@@ -71,16 +71,16 @@ func GetOriginActualDepartureTime(b browser.Browser, db timezone.TimeZoneDatabas
 	return flighteraGetActualDeparture(b, db, origin)
 }
 
-// GetDestinationScheduledDepartureTime gets the scheduled departure time at the
+// GetDestinationScheduledLandingTime gets the scheduled departure time at the
 // origin.
-func GetDestinationScheduledDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
-	return flighteraGetScheduledDeparture(b, db, origin)
+func GetDestinationScheduledLandingTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetScheduledDeparture(b, db, destination)
 }
 
-// GetDestinationActualDepartureTime gets the scheduled departure time at the
+// GetDestinationActualLandingTime gets the scheduled departure time at the
 // origin.
-func GetDestinationActualDepartureTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
-	return flighteraGetActualDeparture(b, db, origin)
+func GetDestinationActualLandingTime(b browser.Browser, db timezone.TimeZoneDatabase) (*time.Time, error) {
+	return flighteraGetActualDeparture(b, db, destination)
 }
 
 func flighteraGetScheduledDeparture(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
