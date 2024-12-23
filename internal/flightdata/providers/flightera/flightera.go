@@ -1,6 +1,7 @@
 package flightera
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -221,6 +222,9 @@ func matchAirportIATA(b browser.Browser, t flightSideType) (string, error) {
 }
 
 func getNodesOnPage(b browser.Browser, query string) ([]*html.Node, error) {
+	if b.Document() == nil {
+		return nil, errors.New("flightera browser not initialized; did you forget to call 'Visit()'?")
+	}
 	found, err := htmlquery.QueryAll(b.Document(), query)
 	if err != nil {
 		return found, nil
