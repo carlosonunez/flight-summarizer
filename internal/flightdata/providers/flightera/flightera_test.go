@@ -41,16 +41,16 @@ func TestOriginActualDepartureTime(t *testing.T) {
 	assert.Equal(t, actual, got)
 }
 
-func TestDestinationScheduledDepartureTime(t *testing.T) {
-	want := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
+func TestDestinationScheduledLandingTime(t *testing.T) {
+	want := timezone.MustParseISO8601Time("2024-12-19T16:05:00-07:00 MST")
 	got, err := GetDestinationScheduledLandingTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
 
-func TestDestinationActualDepartureTime(t *testing.T) {
-	actual := timezone.MustParseISO8601Time("2024-12-19T15:10:00-06:00 CST")
-	scheduled := timezone.MustParseISO8601Time("2024-12-19T14:52:00-06:00 CST")
+func TestDestinationActualLandingTime(t *testing.T) {
+	scheduled := timezone.MustParseISO8601Time("2024-12-19T16:05:00-07:00 MST")
+	actual := timezone.MustParseISO8601Time("2024-12-19T15:52:00-07:00 MST")
 	got, err := GetDestinationActualLandingTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)

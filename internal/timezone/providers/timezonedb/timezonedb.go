@@ -64,6 +64,9 @@ func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (i
 	}
 	for obj := it.Next(); obj != nil; obj = it.Next() {
 		ent := obj.(*TimeZoneDBDotComEntry)
+		if ent.Abbreviation != ID {
+			continue
+		}
 		if start.Unix() <= ent.TimeStart {
 			return ent.UTCOffsetSeconds, nil
 		}
