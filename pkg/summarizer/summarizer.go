@@ -2,14 +2,12 @@ package summarizer
 
 import (
 	"time"
-
-	"github.com/carlosonunez/flight-summarizer/pkg/browser"
 )
 
 // FlightSummarizer returns a FlightSummary from a byte array of data.
 type FlightSummarizer interface {
 	// Summarize does the thing!
-	Summarize(b browser.Browser) (*FlightSummary, error)
+	Summarize() (*FlightSummary, error)
 }
 
 // FlightSummary provides useful details about a flight
