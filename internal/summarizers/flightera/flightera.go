@@ -1,6 +1,8 @@
 package flightera
 
 import (
+	"errors"
+
 	"github.com/carlosonunez/flight-summarizer/internal/flightdata/providers/flightera"
 	"github.com/carlosonunez/flight-summarizer/internal/timezone/providers/timezonedb"
 	"github.com/carlosonunez/flight-summarizer/pkg/browser"
@@ -14,6 +16,25 @@ type FlighteraFlightSummarizer struct {
 	browser browser.Browser
 	tzdb    timezone.TimeZoneDatabase
 	summary *summarizer.FlightSummary
+}
+
+// Init starts a new Flightera summarizer.
+func (s *FlighteraFlightSummarizer) Init(opts *summarizer.FlightSummarizerOptions) (err error) {
+	if opts.FlightNumber == "" {
+		return errors.New("flight number is missing; please provide it")
+	}
+	s.summary = summarizer.NewEmptyFlightSummary()
+	if s.browser, err = flightera.NewFlighteraTextBrowser(opts.FlightNumber); err != nil {
+		return err
+	}
+	// TODO: Get browser options from FlightSummarizerOptions.
+	if err = s.browser.Visit(browser.NO_BROWSER_OPTIONS); err != nil {
+		return err
+	}
+	if s.tzdb, err = timezonedb.NewTimeZoneDBDotComDB(timezonedb.DEFAULT_OPTIONS); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Summarize does the summarization.
@@ -68,21 +89,4 @@ func summarizeLandingTimes(s *FlighteraFlightSummarizer, b browser.Browser) (err
 		return err
 	}
 	return nil
-}
-
-// NewFlighteraFlightSummarizer creates a flight summarizer pulled from
-// Flightera data retrieved via a text-based browser.
-func NewFlighteraFlightSummarizer(flightNumber string) (*FlighteraFlightSummarizer, error) {
-	var err error
-	s := FlighteraFlightSummarizer{summary: summarizer.NewEmptyFlightSummary()}
-	if s.browser, err = flightera.NewFlighteraTextBrowser(flightNumber); err != nil {
-		return nil, err
-	}
-	if err = s.browser.Visit(browser.NO_BROWSER_OPTIONS); err != nil {
-		return nil, err
-	}
-	if s.tzdb, err = timezonedb.NewTimeZoneDBDotComDB(timezonedb.DEFAULT_OPTIONS); err != nil {
-		return nil, err
-	}
-	return &s, nil
 }

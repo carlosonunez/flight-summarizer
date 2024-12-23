@@ -40,8 +40,20 @@ func (t *Time) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	return fmt.Errorf("unable to parse time '%s':\n%+v", s, strings.Join(errors, "\n"))
 }
 
+// FlightSummarizerOptions are options to provide to the summarizer.
+type FlightSummarizerOptions struct {
+	// FlightNumber is the flight to lookup.
+	FlightNumber string
+
+	// SummarizerOptions are additional options that the summarizer accepts.
+	SummarizerOptions map[string]interface{}
+}
+
 // FlightSummarizer returns a FlightSummary from a byte array of data.
 type FlightSummarizer interface {
+	// Init initializes a new summarizer.
+	Init(*FlightSummarizerOptions) error
+
 	// Summarize does the thing!
 	Summarize() (*FlightSummary, error)
 }

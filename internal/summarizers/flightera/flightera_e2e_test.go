@@ -25,7 +25,8 @@ var tcs *testCaseList
 
 func TestFlighteraLiveFlightsE2E(t *testing.T) {
 	for _, tc := range tcs.Tests {
-		s, err := NewFlighteraFlightSummarizer(tc.FlightURLFragment)
+		s := FlighteraFlightSummarizer{}
+		err := s.Init(&summarizer.FlightSummarizerOptions{FlightNumber: tc.FlightURLFragment})
 		require.NoError(t, err, "test case: %s", tc.FlightURLFragment)
 		want := tc.Want
 		got, err := s.Summarize()
