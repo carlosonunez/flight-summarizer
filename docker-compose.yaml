@@ -2,6 +2,7 @@ volumes:
   gomod: {}
   gocache: {}
   outdir: {}
+  tzdb-vol: {}
 services:
   build:
     image: golang:${GOLANG_VERSION}-alpine
@@ -27,7 +28,6 @@ services:
     volumes:
       - gomod:/go/pkg/mod
       - gocache:/root/.cache/go-build
-      - outdir:/out
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
     entrypoint: [ "go" ]
@@ -45,6 +45,30 @@ services:
       - ${TEST_EXCLUDE:-E2E}
       - -run
       - ${TEST_FILTER:-.*}
+  e2e:
+    depends_on:
+      _retrieve_timezones:
+        condition: service_completed_successfully
+    image: golang:${GOLANG_VERSION}-alpine
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - tzdb-vol:/data
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - TEST_EXCLUDE
+      - TEST_FILTER
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+    command:
+      - test
+      - -failfast
+      - ./...
+      - -run
+      - E2E
   run:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
@@ -66,3 +90,25 @@ services:
       - ./...
       - -skip
       - '!E2E$'
+  _retrieve_timezones:
+    image: curlimages/curl:8.11.1
+    entrypoint: sh
+    user: root
+    environment:
+      - REFRESH_TZ
+    volumes:
+      - tzdb-vol:/out
+    command:
+      - -c
+      - |
+        { test -z "$REFRESH_TZ" && test -f /out/timezonedb.csv; } && exit 0
+        cd /tmp
+        curl -o tzdb.csv.zip https://timezonedb.com/files/TimeZoneDB.csv.zip &&
+        unzip tzdb.csv.zip &&
+        echo 'id,zone_name,country_code,abbreviation,time_start,gmt_offset,dst' > /out/timezonedb.csv; \
+        {
+          cat -b time_zone.csv |
+            tr '\t' ',' |
+            sed -E 's/^[ \t]+//';
+        } | sort -r > /out/timezonedb.csv
+

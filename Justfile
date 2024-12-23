@@ -14,6 +14,10 @@ build:
 test:
   just --one _docker_compose run --rm test
 
+# performs Flight Summarizer end-to-end tests
+e2e:
+  just --one _docker_compose run --rm e2e
+
 _docker_compose *ARGS:
   #!/usr/bin/env bash
   if ! test -e "$HOME/.docker/cli-plugins/docker-compose"
