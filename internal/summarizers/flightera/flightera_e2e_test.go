@@ -39,7 +39,7 @@ func TestFlighteraLiveFlightsE2E(t *testing.T) {
 	}
 }
 
-func testTimes(t *testing.T, want *time.Time, got *time.Time, format string, parts ...any) {
+func testTimes(t *testing.T, want *summarizer.Time, got *summarizer.Time, format string, parts ...any) {
 	require.NotNil(t, got, fmt.Sprintf(format, parts...))
 	// time.Time.Equal(...) will be false for times that don't have the same
 	// location data in them, which ours do not.

@@ -1,8 +1,44 @@
 package summarizer
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
+
+type Time struct {
+	*time.Time
+}
+
+func (t *Time) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", t.Format("2006-01-02 15:04 MST"))), nil
+}
+
+func (t *Time) MarshalYAML() ([]byte, error) {
+	return []byte(t.Format("2006-01-02 15:04 MST")), nil
+}
+
+func (t *Time) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
+	var s string
+	if err = unmarshal(&s); err != nil {
+		return err
+	}
+	formats := []string{
+		"2006-01-02T15:04:05Z-07:00 MST",
+		"2006-01-02T15:04:05Z-07:00",
+		"2006-01-02T15:04:05-07:00",
+	}
+	var errors = make([]string, len(formats))
+	for idx, format := range formats {
+		if parsed, err := time.Parse(format, s); err == nil {
+			*t = Time{&parsed}
+			return nil
+		} else {
+			errors[idx] = fmt.Sprintf("  - %s", err)
+		}
+	}
+	return fmt.Errorf("unable to parse time '%s':\n%+v", s, strings.Join(errors, "\n"))
+}
 
 // FlightSummarizer returns a FlightSummary from a byte array of data.
 type FlightSummarizer interface {
@@ -36,9 +72,9 @@ type Point struct {
 // flight.
 type FlightSummaryDateTimes struct {
 	// Scheduled are scheduled (unrealistic) times.
-	Scheduled *time.Time `json:"scheduled" yaml:"scheduled"`
+	Scheduled *Time `json:"scheduled" yaml:"scheduled"`
 	// Actual are actual (realistic) times.
-	Actual *time.Time `json:"actual" yaml:"actual"`
+	Actual *Time `json:"actual" yaml:"actual"`
 }
 
 // NewEmptyFlightSummary creates an empty flight summary (so that the summarizer

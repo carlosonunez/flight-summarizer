@@ -51,20 +51,20 @@ func summarizeAirports(s *FlighteraFlightSummarizer, b browser.Browser) (err err
 }
 
 func summarizeDepartureTimes(s *FlighteraFlightSummarizer, b browser.Browser) (err error) {
-	if s.summary.Origin.Times.Scheduled, err = flightera.GetOriginScheduledDepartureTime(b, s.tzdb); err != nil {
+	if s.summary.Origin.Times.Scheduled.Time, err = flightera.GetOriginScheduledDepartureTime(b, s.tzdb); err != nil {
 		return err
 	}
-	if s.summary.Origin.Times.Actual, err = flightera.GetOriginActualDepartureTime(b, s.tzdb); err != nil {
+	if s.summary.Origin.Times.Actual.Time, err = flightera.GetOriginActualDepartureTime(b, s.tzdb); err != nil {
 		return err
 	}
 	return nil
 }
 
 func summarizeLandingTimes(s *FlighteraFlightSummarizer, b browser.Browser) (err error) {
-	if s.summary.Destination.Times.Scheduled, err = flightera.GetDestinationScheduledLandingTime(b, s.tzdb); err != nil {
+	if s.summary.Destination.Times.Scheduled.Time, err = flightera.GetDestinationScheduledLandingTime(b, s.tzdb); err != nil {
 		return err
 	}
-	if s.summary.Destination.Times.Actual, err = flightera.GetDestinationActualLandingTime(b, s.tzdb); err != nil {
+	if s.summary.Destination.Times.Actual.Time, err = flightera.GetDestinationActualLandingTime(b, s.tzdb); err != nil {
 		return err
 	}
 	return nil
