@@ -81,7 +81,17 @@ type FlightSummaryDateTimes struct {
 // doesn't have to type out this ugly struct initializer themselves)
 func NewEmptyFlightSummary() *FlightSummary {
 	return &FlightSummary{
-		Origin:      &Point{Times: &FlightSummaryDateTimes{}},
-		Destination: &Point{Times: &FlightSummaryDateTimes{}},
+		Origin: &Point{
+			Times: &FlightSummaryDateTimes{
+				Scheduled: &Time{},
+				Actual:    &Time{},
+			},
+		},
+		Destination: &Point{
+			Times: &FlightSummaryDateTimes{
+				Scheduled: &Time{},
+				Actual:    &Time{},
+			},
+		},
 	}
 }
