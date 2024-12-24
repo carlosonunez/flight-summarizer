@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+ensure_no_barking() {
+  if git log -1 --format=%s | grep -E '^\[has-barks\]'
+  then
+    >&2 echo "WARNING: debug statements found; allowing push due to commit message"
+    return 0
+  fi
+  results=$(grep -n --include '*.go' --exclude .git -r 'fmt.Printf' "$PWD")
+  test -z "$results" && return 0
+
+  >&2 echo "ERROR: Found fmt.Printf barks in the files below; delete them or
+add '[has-barks]' to the commit message to continue:
+
+$(echo "$results" | sed -E 's/^/- /')"
+  return 1
+}
+
+ensure_no_barking && exit 0

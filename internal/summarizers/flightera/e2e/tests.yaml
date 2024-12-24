@@ -1,0 +1,15 @@
+---
+tests:
+  - stub: "American+Airlines-New+York-Los+Angeles/AA1/KJFK/2024-12-11"
+    want:
+      flight_number: AAL1
+      origin:
+        airport: JFK
+        times:
+          scheduled: 2024-12-11T06:58:00-05:00
+          actual: 2024-12-11T07:06:00-05:00
+      destination:
+        airport: LAX
+        times:
+          scheduled: 2024-12-11T10:20:00-08:00
+          actual: 2024-12-11T10:02:00-08:00
