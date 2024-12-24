@@ -5,6 +5,11 @@ deploy: build test
   #!/usr/bin/env bash
   >&2 echo "Work in progress!"
 
+# Starts a local instance of the Flight Summarizer server!
+start-server: build
+  SERVER_HOST=0.0.0.0 just --one _docker_compose up --build summarizer-server
+  just --one _docker_compose down
+
 # builds Flight Summarizer ✈️
 build:
   #!/usr/bin/env bash
