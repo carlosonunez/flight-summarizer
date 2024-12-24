@@ -1,0 +1,69 @@
+---
+name: Publish Flightera Summarizer
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - README.md
+      - CONTRIBUTING.md
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: extractions/setup-just@v2
+
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/docker-compose.yaml') }}"
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        name: Set up Docker Compose
+        with:
+          version: '2.23.3'
+
+      - name: Test Flightera Summarizer
+        run: just test
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: extractions/setup-just@v2
+
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/docker-compose.yaml') }}"
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        name: Set up Docker Compose
+        with:
+          version: '2.23.3'
+
+      - name: Run e2e tests Flightera Summarizer
+        run: just e2e
+  publish:
+    needs:
+      - test
+      - e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: extractions/setup-just@v2
+
+      - name: Cache Docker images
+        uses: ScribeMD/docker-cache@0.5.0
+        with:
+          key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/docker-compose.yaml') }}"
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        name: Set up Docker Compose
+        with:
+          version: '2.23.3'
+
+      - name: Publish ${{ github.repository }}
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}  # it will be lowercased internally
+          github_token: ${{ secrets.GITHUB_TOKEN }}
