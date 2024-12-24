@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gocarina/gocsv"
@@ -55,6 +56,9 @@ type TimeZoneDBDotComDB struct {
 
 // LookupUTCOffsetByID looks up a UTC offset given a timezone ID, like "CST".
 func (db *TimeZoneDBDotComDB) LookupUTCOffsetByID(ID string, start time.Time) (int64, error) {
+	if strings.ToLower(ID) == "utc" {
+		return 0, nil
+	}
 	txn := db.db.Txn(false)
 	defer txn.Abort()
 
