@@ -1,28 +1,36 @@
 volumes:
   gomod: {}
   gocache: {}
-  outdir: {}
   tzdb-vol: {}
 services:
+  summarizer-server:
+    build:
+      context: .
+    environment:
+      - SERVER_HOST
+      - SERVER_PORT
+    ports:
+      - ${SERVER_PORT:-8080}:${SERVER_PORT:-8080}
+    command:
+      - serve
   build:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
       - gomod:/go/pkg/mod
       - gocache:/root/.cache/go-build
-      - outdir:/out
+      - $PWD/out:/out
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
-    entrypoint: [ "go" ]
+    entrypoint: [ "sh" ]
     environment:
       - CGO_ENABLED=0
       - GOOS=${GOOS:-linux}
       - GOARCH=${GOARCH:-arm64}
       - PROJECT_NAME
     command:
-      - build
-      - -o 
-      - /out
-      - ./...
+      - -c
+      - |
+        go build -o "/out/${PROJECT_NAME}-$${GOOS}-$${GOARCH}" ./cmd/${PROJECT_NAME}/main.go
   test:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
@@ -47,7 +55,7 @@ services:
       - ${TEST_FILTER:-.*}
   e2e:
     depends_on:
-      _retrieve_timezones:
+      retrieve_timezones:
         condition: service_completed_successfully
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
@@ -69,28 +77,7 @@ services:
       - ./...
       - -run
       - E2E
-  run:
-    image: golang:${GOLANG_VERSION}-alpine
-    volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
-      - outdir:/out
-      - $PWD:/usr/local/go/src/project
-    working_dir: /usr/local/go/src/project
-    entrypoint: [ "go" ]
-    environment:
-      - TEST_FILTER
-      - TEST_EXCLUDE
-      - CGO_ENABLED=0
-      - GOOS=${GOOS:-linux}
-      - GOARCH=${GOARCH:-arm64}
-    command:
-      - test
-      - -failfast
-      - ./...
-      - -skip
-      - '!E2E$'
-  _retrieve_timezones:
+  retrieve_timezones:
     image: curlimages/curl:8.11.1
     entrypoint: sh
     user: root
@@ -98,17 +85,6 @@ services:
       - REFRESH_TZ
     volumes:
       - tzdb-vol:/out
+      - $PWD/include/refresh_tz.sh:/script.sh
     command:
-      - -c
-      - |
-        { test -z "$REFRESH_TZ" && test -f /out/timezonedb.csv; } && exit 0
-        cd /tmp
-        curl -o tzdb.csv.zip https://timezonedb.com/files/TimeZoneDB.csv.zip &&
-        unzip tzdb.csv.zip &&
-        echo 'id,zone_name,country_code,abbreviation,time_start,gmt_offset,dst' > /out/timezonedb.csv; \
-        {
-          cat -b time_zone.csv |
-            tr '\t' ',' |
-            sed -E 's/^[ \t]+//';
-        } | sort -r > /out/timezonedb.csv
-
+      - /script.sh

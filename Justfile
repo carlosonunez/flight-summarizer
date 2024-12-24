@@ -1,5 +1,4 @@
 # Ships Flight Summarizer!
-export PROJECT_NAME := "flight-summarizer"
 export GOLANG_VERSION := `grep -E '^go ([0-9]{1,}\.[0-9]{1,})$' $PWD/go.mod | awk '{print $NF}'`
 
 deploy: build test
@@ -8,7 +7,11 @@ deploy: build test
 
 # builds Flight Summarizer ✈️
 build:
-  just --one _docker_compose run --rm build
+  #!/usr/bin/env bash
+  for project in cmd/*
+  do
+    PROJECT_NAME="$(basename $project)" just --one _docker_compose run --rm build
+  done
 
 # tests Flight Summarizer ✈️
 test:
