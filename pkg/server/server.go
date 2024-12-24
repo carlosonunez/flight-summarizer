@@ -4,17 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
 
 	"github.com/carlosonunez/flight-summarizer/internal/summarizers"
 	"github.com/carlosonunez/flight-summarizer/pkg/summarizer"
-	log "github.com/sirupsen/logrus"
-)
-
-const (
-	defaultPort8080               int    = 8080
-	defaultListenAddressLocalhost string = "127.0.0.1"
 )
 
 // ServerOptions are options to provide to the server.
@@ -25,6 +19,12 @@ type ServerOptions struct {
 	// ListenAddress specifies the IP address to bind the summarizer to (default:
 	// 127.0.0.1)
 	ListenAddress string
+}
+
+type response struct {
+	Status  string                    `json:"status"`
+	Error   string                    `json:"error,omitempty"`
+	Summary *summarizer.FlightSummary `json:"summary,omitempty"`
 }
 
 type muxHandler interface {
@@ -52,89 +52,102 @@ type SummarizerServerOptions struct {
 // Start starts a new blocking summarizer HTTP server
 func Start(opts *ServerOptions) error {
 	if opts.Port == 0 {
-		log.Warningf("No port provided to the summarizer server; using default port %d", defaultPort8080)
-		opts.Port = defaultPort8080
+		return errors.New("server port missing")
 	}
 	if opts.ListenAddress == "" {
-		log.Warning("No listen address provided; listening on localhost only (external connections might not work)")
-		opts.ListenAddress = defaultListenAddressLocalhost
+		return errors.New("server address missing")
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/summarize", &handler{fn: summarizeHandler})
+	log.Printf("server started at %s:%d; press CTRL-C to stop\n", opts.ListenAddress, opts.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListenAddress, opts.Port), mux)
 	return nil
 }
 
 func summarizeHandler(w http.ResponseWriter, r *http.Request) {
-	s, err := lookupSummarizer(w, r)
+	flightNumber, err := lookupFlightNumber(r)
 	if err != nil {
-		return
-	}
-	flightNumber, err := lookupFlightNumber(w, r)
-	if err != nil {
+		writeError(w, http.StatusBadRequest, "failed while looking up flight: %s", err)
 		return
 	}
 	opts := summarizer.FlightSummarizerOptions{
 		FlightNumber: flightNumber,
 	}
-	if err := initSummarizer(s, &opts, w); err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
-		return
-	}
-	resp, err := summarize(s, w)
+	s, err := lookupSummarizer(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "couldn't find summarizer: %s", err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, string(resp))
+	if err := initSummarizer(s, &opts); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed while initializing this summarizer: %s", err)
+		return
+	}
+	resp, err := summarize(s)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed while summarizing: %s", err)
+		return
+	}
+	writeOK(w, resp)
 }
 
-func summarize(s summarizer.FlightSummarizer, w http.ResponseWriter) ([]byte, error) {
+func summarize(s summarizer.FlightSummarizer) (*summarizer.FlightSummary, error) {
 	summary, err := s.Summarize()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
-		return []byte{}, err
+		return nil, err
 	}
-	resp, err := json.Marshal(summary)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
-		return []byte{}, err
-	}
-	return resp, nil
+	return summary, nil
 }
 
-func initSummarizer(s summarizer.FlightSummarizer, opts *summarizer.FlightSummarizerOptions, w http.ResponseWriter) error {
+func initSummarizer(s summarizer.FlightSummarizer, opts *summarizer.FlightSummarizerOptions) error {
 	if err := s.Init(opts); err != nil {
-		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 		return err
 	}
 	return nil
 }
 
-func lookupSummarizer(w http.ResponseWriter, r *http.Request) (summarizer.FlightSummarizer, error) {
+func lookupSummarizer(r *http.Request) (summarizer.FlightSummarizer, error) {
 	var summarizer summarizer.FlightSummarizer
 	var err error
 	summarizerStr := r.URL.Query().Get("summarizer")
 	if len(summarizerStr) == 0 {
 		if summarizer, err = summarizers.LookupDefault(); err != nil {
-			http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
 			return nil, err
 		}
 	} else {
 		if summarizer, err = summarizers.Lookup(summarizerStr); err != nil {
-			http.Error(w, fmt.Sprintf("%s", err), http.StatusBadRequest)
 			return nil, err
 		}
 	}
 	return summarizer, nil
 }
 
-func lookupFlightNumber(w http.ResponseWriter, r *http.Request) (string, error) {
+func lookupFlightNumber(r *http.Request) (string, error) {
 	f := r.URL.Query().Get("flightNumber")
 	if len(f) == 0 {
-		http.Error(w, "flight number missing", http.StatusBadRequest)
 		return "", errors.New("flight number missing")
 	}
 	return f, nil
+}
+
+func writeError(w http.ResponseWriter, code int, format string, parts ...any) {
+	r := response{
+		Status: "error",
+		Error:  fmt.Sprintf(format, parts...),
+	}
+	body, _ := json.Marshal(&r)
+	http.Error(w, string(body), code)
+}
+
+func writeOK(w http.ResponseWriter, summary *summarizer.FlightSummary) {
+	r := response{
+		Status:  "ok",
+		Summary: summary,
+	}
+	body, err := json.Marshal(&r)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "couldn't parse summary: %s", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", body)
 }

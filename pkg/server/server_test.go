@@ -15,19 +15,22 @@ import (
 func TestRetrievesFlightSummary(t *testing.T) {
 	var want bytes.Buffer
 	wantRaw := `{
-	"flight_number": "FAKE1",
-	"origin": {
-		"airport": "FOO",
-		"times": {
-				"scheduled": "2024-12-23 11:07 PST",
-				"actual": "2024-12-23 11:00 PST"
+  "status": "ok",
+	"summary": {
+		"flight_number": "FAKE1",
+		"origin": {
+			"airport": "FOO",
+			"times": {
+					"scheduled": "2024-12-23 11:07 PST",
+					"actual": "2024-12-23 11:00 PST"
+				}
+		},
+		"destination": {
+			"airport": "BAR",
+			"times": {
+					"scheduled": "2024-12-23 11:07 PST",
+					"actual": "2024-12-23 11:00 PST"
 			}
-	},
-	"destination": {
-		"airport": "BAR",
-		"times": {
-				"scheduled": "2024-12-23 11:07 PST",
-				"actual": "2024-12-23 11:00 PST"
 		}
 	}
 }`
