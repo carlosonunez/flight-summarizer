@@ -28,7 +28,7 @@ e2e:
 
 _docker_compose *ARGS:
   #!/usr/bin/env bash
-  if ! test -e "$HOME/.docker/cli-plugins/docker-compose"
+  if ! &>/dev/null docker compose
   then
     >&2 echo "ERROR: Docker Compose CLI plugin not found; please install it"
     exit 1
