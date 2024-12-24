@@ -43,11 +43,15 @@ MAY TAKE IN RESPONSE TO THE OPERATION THIS SOFTWARE.**
 ### v1
 
 [X] Retrieve just-in-time takeoff and arrival info for a flight
+
 [ ] Local server mode
 
 ### Future
 
 [ ] Deployment instructions for AWS Lambda
+
 [ ] Retrieve takeoff and arrival info for a flight on any date
+
 [ ] Move to [carlosonunez/serverless-stack](https://github.com/carlosonunez/serverless-stack) (upcoming)
+
 [ ] Support headless browser scraping
