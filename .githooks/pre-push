@@ -7,7 +7,7 @@ ensure_no_barking() {
     >&2 echo "WARNING: debug statements found; allowing push due to commit message"
     return 0
   fi
-  results=$(grep -n --include '*.go' --exclude .gomod --exclude .gocache --exclude .git -r 'fmt.Printf' "$PWD")
+  results=$(grep -r -n --include=*.go --exclude-dir={.gomod,.gocache,.git,out} 'fmt.Printf' "$PWD")
   test -z "$results" && return 0
 
   >&2 echo "ERROR: Found fmt.Printf barks in the files below; delete them or
