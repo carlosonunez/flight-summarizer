@@ -87,7 +87,7 @@ jobs:
         with:
           version: '2.27.1'
 
-      - name: Publish Flight Summarizer
+      - name: Publish Flight Summarizer to GitHub Container Registry
         run: just deploy_to_ghcr
         env:
           GITHUB_REPOSITORY: "${{ github.repository }}"
