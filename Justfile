@@ -3,6 +3,7 @@ set export := true
 
 export GOLANG_VERSION := `grep -E '^go ([0-9]{1,}\.[0-9]{1,})$' $PWD/go.mod | awk '{print $NF}'`
 export BUILD_ARCHS := "linux/arm64 linux/amd64"
+export GOARCH := env("GOARCH", "arm64")
 
 # Cleans up our workspace
 clean: _remove_buildx_builders

@@ -145,7 +145,7 @@ services:
       - REFRESH_TZ
     volumes:
       - tzdb-vol:/out
-      - $PWD/include/refresh_tz.sh:/script.sh
+      - $PWD/include/retrieve_tz.sh:/script.sh
     command:
       - /script.sh
   _remove_buildx_builder:
