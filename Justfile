@@ -72,13 +72,26 @@ _docker_compose *ARGS:
 
 _arch:
   #!/usr/bin/env bash
-  if test -n "$RUNNER_ARCH"
-  then echo "${RUNNER_ARCH,,}" && exit 0
+  arch="${RUNNER_ARCH:-$(uname -p)}"
+  if test -z "$arch"
+  then
+    >&2 echo "ERROR: Couldn't find this machine's CPU architecture."
+    exit 1
   fi
-  if grep -iq 'arm' <<< "$(uname -p)"
-  then echo "arm64" && exit 0
-  fi
-  echo "amd64"
+  case "${arch,,}" in
+  *x86*|*amd*)
+    echo "amd64"
+    exit 0
+    ;;
+  *arm*)
+    echo "arm64"
+    exit 0
+    ;;
+  *)
+    >&2 echo "ERROR: Unsupported architecture: $arch"
+    exit 1
+    ;;
+  esac
 
 _ensure_gh_creds_available:
   #!/usr/bin/env bash
