@@ -1,6 +1,4 @@
 volumes:
-  gomod: {}
-  gocache: {}
   tzdb-vol: {}
   tsdata-vol: {}
   gpgdata-vol: {}
@@ -22,8 +20,8 @@ services:
   build:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
+      - $PWD/.gomod:/go/pkg/mod
+      - $PWD/.gocache:/root/.cache/go-build
       - $PWD/out:/out
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
@@ -42,8 +40,8 @@ services:
     image: golang:${GOLANG_VERSION}-alpine
     platform: "linux/$GOARCH"
     volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
+      - $PWD/.gomod:/go/pkg/mod
+      - $PWD/.gocache:/root/.cache/go-build
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
     entrypoint: [ "go" ]
@@ -75,8 +73,8 @@ services:
     image: golang:${GOLANG_VERSION}-alpine
     platform: "linux/$GOARCH"
     volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
+      - $PWD/.gomod:/go/pkg/mod
+      - $PWD/.gocache:/root/.cache/go-build
       - tzdb-vol:/data
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
@@ -97,14 +95,14 @@ services:
     depends_on:
       tailscale:
         condition: service_healthy
-      retrieve_timezones:
+      retrieve_timezones-ci:
         condition: service_completed_successfully
     image: golang:${GOLANG_VERSION}-alpine
     platform: "linux/$GOARCH"
     network_mode: service:tailscale
     volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
+      - $PWD/.gomod:/go/pkg/mod
+      - $PWD/.gocache:/root/.cache/go-build
       - tzdb-vol:/data
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
@@ -168,6 +166,17 @@ services:
   # wrote Flight Summarizer. This service will likely move
   # into a Go helper app sometime in the future.
   retrieve_timezones:
+    image: curlimages/curl:8.11.1
+    entrypoint: sh
+    user: root
+    environment:
+      - REFRESH_TZ
+    volumes:
+      - tzdb-vol:/data
+      - $PWD/include/retrieve_tz.sh:/script.sh
+    command:
+      - /script.sh
+  retrieve_timezones-ci:
     image: curlimages/curl:8.11.1
     entrypoint: sh
     user: root

@@ -19,6 +19,14 @@ jobs:
         with:
           key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/docker-compose.yaml') }}"
 
+      - name: Cache compiled Go dependencies
+        uses: actions/cache@v3
+        with:
+          key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}"
+          path: |
+            ${{ runner.temp }}/.gocache
+            ${{ runner.temp }}/.gomod
+
       - uses: KengoTODA/actions-setup-docker-compose@main
         name: Set up Docker Compose
         with:
@@ -40,6 +48,14 @@ jobs:
         uses: ScribeMD/docker-cache@0.5.0
         with:
           key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/docker-compose.yaml') }}"
+
+      - name: Cache compiled Go dependencies
+        uses: actions/cache@v3
+        with:
+          key: "${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}"
+          path: |
+            ${{ runner.temp }}/.gocache
+            ${{ runner.temp }}/.gomod
 
       - uses: KengoTODA/actions-setup-docker-compose@main
         name: Set up Docker Compose

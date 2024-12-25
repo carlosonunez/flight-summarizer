@@ -1,3 +1,5 @@
 cscope.*
 tags
 out/
+.gomod
+.gocache
