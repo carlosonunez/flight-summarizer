@@ -13,6 +13,41 @@ services:
       - ${SERVER_PORT:-8080}:${SERVER_PORT:-8080}
     command:
       - serve
+  deploy-to-ghcr:
+    image: docker:27.4.1-cli-alpine3.21
+    volumes:
+      - $PWD/Dockerfile:/work/Dockerfile
+      - $PWD/out:/work/out
+      - $PWD/include:/work/include
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /work
+    environment:
+      - GITHUB_REPOSITORY
+      - GITHUB_TOKEN
+      - PROJECT_NAME
+      - ARCHITECTURES_CSV
+      - BUILD_TAGS
+    entrypoint: [ "sh" ]
+    command:
+      - -c
+      - |
+        set -eo pipefail
+        docker buildx ls | grep -q "${PROJECT_NAME}-builder" ||
+          docker buildx create --driver docker-container \
+            --name "${PROJECT_NAME}-builder" &>/dev/null
+        docker login ghcr.io -u "$(echo "$GITHUB_REPOSITORY" | cut -f1 -d '/')" -p "$GITHUB_TOKEN"
+        >&2 echo "INFO: Building $PROJECT_NAME for archs: $ARCHITECTURES_CSV"
+        for tag in $(echo "$BUILD_TAGS" | tr ',' ' ')
+        do
+          this_tag="ghcr.io/$GITHUB_REPOSITORY:$$tag"
+          docker buildx build --builder "${PROJECT_NAME}-builder" \
+            -t "$$this_tag" \
+            --build-arg PROJECT_NAME="$PROJECT_NAME" \
+            --platform "$ARCHITECTURES_CSV" \
+            --output registry \
+            --push \
+            .
+        done
   build:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
@@ -88,3 +123,18 @@ services:
       - $PWD/include/refresh_tz.sh:/script.sh
     command:
       - /script.sh
+  _remove_buildx_builder:
+    image: docker:27.4.1-cli-alpine3.21
+    volumes:
+      - $PWD/Dockerfile:/work/Dockerfile
+      - $PWD/out:/work/out
+      - $PWD/include:/work/include
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /work
+    environment:
+      - PROJECT_NAME
+    entrypoint: [ "docker" ]
+    command:
+      - buildx
+      - rm
+      - "${PROJECT_NAME}-builder"
