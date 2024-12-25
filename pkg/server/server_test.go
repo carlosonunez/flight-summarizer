@@ -12,8 +12,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRetrievesFlightSummary(t *testing.T) {
+func TestReadyEndpoint(t *testing.T) {
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodGet, "/ping", nil)
+	require.NoError(t, err)
+	pingHandler(w, req)
+	testStatusCodeOK(t, w.Result())
+	testBodyEqual(t, `{"status":"ok"}`, w.Result())
+}
+
+func testStatusCodeOK(t *testing.T, r *http.Response) {
+	assert.Equal(t, http.StatusOK, r.StatusCode)
+}
+
+func testBodyEqual(t *testing.T, wantRaw string, r *http.Response) {
 	var want bytes.Buffer
+	var got bytes.Buffer
+	require.NoError(t, json.Indent(&want, []byte(wantRaw), "", "	"))
+	defer r.Body.Close()
+	gotRaw, err := io.ReadAll(r.Body)
+	require.NoError(t, err)
+	assert.NoError(t, json.Indent(&got, gotRaw, "", "	"))
+	assert.Equal(t, want.String(), got.String())
+}
+
+func TestRetrievesFlightSummary(t *testing.T) {
 	wantRaw := `{
   "status": "ok",
 	"summary": {
@@ -34,16 +57,10 @@ func TestRetrievesFlightSummary(t *testing.T) {
 		}
 	}
 }`
-	require.NoError(t, json.Indent(&want, []byte(wantRaw), "", "	"))
 	req := httptest.NewRequest(http.MethodGet, "/summarize?flightNumber=FOOBAR1&summarizer=test", nil)
 	w := httptest.NewRecorder()
 	summarizeHandler(w, req)
 	res := w.Result()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	defer res.Body.Close()
-	gotRaw, err := io.ReadAll(res.Body)
-	require.NoError(t, err)
-	var got bytes.Buffer
-	assert.NoError(t, json.Indent(&got, gotRaw, "", "	"))
-	assert.Equal(t, want.String(), got.String())
+	testStatusCodeOK(t, res)
+	testBodyEqual(t, wantRaw, res)
 }

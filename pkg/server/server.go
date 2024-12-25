@@ -58,10 +58,25 @@ func Start(opts *ServerOptions) error {
 		return errors.New("server address missing")
 	}
 	mux := http.NewServeMux()
-	mux.Handle("/summarize", &handler{fn: summarizeHandler})
+	initRoutes(mux)
 	log.Printf("server started at %s:%d; press CTRL-C to stop\n", opts.ListenAddress, opts.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListenAddress, opts.Port), mux)
 	return nil
+}
+
+func initRoutes(mux *http.ServeMux) {
+	mux.Handle("/summarize", &handler{fn: summarizeHandler})
+	mux.Handle("/ping", &handler{fn: pingHandler})
+}
+
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := json.Marshal(&response{Status: "ok"})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "ping check failed: %s", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "%s", body)
 }
 
 func summarizeHandler(w http.ResponseWriter, r *http.Request) {
