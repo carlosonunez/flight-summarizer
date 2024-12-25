@@ -70,6 +70,31 @@ services:
   # this service.
   e2e:
     depends_on:
+      retrieve_timezones:
+        condition: service_completed_successfully
+    image: golang:${GOLANG_VERSION}-alpine
+    platform: "linux/$GOARCH"
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - tzdb-vol:/data
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - TEST_EXCLUDE
+      - TEST_FILTER
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+    command:
+      - test
+      - -failfast
+      - ./...
+      - -run
+      - E2E
+  e2e-ci:
+    depends_on:
       tailscale:
         condition: service_started
       retrieve_timezones:
@@ -192,7 +217,7 @@ services:
       context: .
     volumes:
       - gpgdata-vol:/root/.gnupg
-      - $PWD/config.yaml:/work/config.yaml
+      - $PWD/config.yaml:/work/config.yaml 
     working_dir: /work
     environment:
       - EDITOR=dont-use-this-to-edit

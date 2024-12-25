@@ -50,8 +50,8 @@ jobs:
         run: just e2e
         env:
           GOARCH: "amd64"
-          GPG_PASSPHRASE: "$${ secrets.GPG_PASSPHRASE }}"
-          GPG_PRIVATE_KEY_B64: "$${ secrets.GPG_PRIVATE_KEY_B64 }}"
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+          GPG_PRIVATE_KEY_B64: "${{ secrets.GPG_PRIVATE_KEY_B64 }}"
   publish:
     needs:
       - test

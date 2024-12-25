@@ -57,8 +57,15 @@ test:
   just --one _docker_compose run --rm test
 
 # performs Flight Summarizer end-to-end tests
-e2e: _ensure_gpg_env
+e2e:
   #!/usr/bin/env bash
+  if test -z "$CI"
+  then
+    just --one _docker_compose run --rm e2e
+    exit "$?"
+  fi
+  >&2 echo "INFO: Detected CI environment; running CI e2e service"
+  just _ensure_gpg_env || exit 1
   set -eo pipefail
   tailscale_env=$(just --one _docker_compose run --rm sops sops \
     -d --extract '[\"config\"][\"tailscale\"][\"env\"]' \
