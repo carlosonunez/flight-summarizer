@@ -3,6 +3,9 @@ volumes:
   gocache: {}
   tzdb-vol: {}
 services:
+  # This starts an instance of Flight Summarizer using the same
+  # Docker image that's deployed by the 'deploy-to-ghcr' service
+  # in this manifest.
   summarizer-server:
     build:
       context: .
@@ -13,6 +16,87 @@ services:
       - ${SERVER_PORT:-8080}:${SERVER_PORT:-8080}
     command:
       - serve
+  # Builds Flight Summarizer binaries.
+  build:
+    image: golang:${GOLANG_VERSION}-alpine
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - $PWD/out:/out
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "sh" ]
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+      - PROJECT_NAME
+    command:
+      - -c
+      - |
+        go build -o "/out/${PROJECT_NAME}-$${GOOS}-$${GOARCH}" ./cmd/${PROJECT_NAME}/main.go
+  # Runs unit tests against Flight Summarizer.
+  test:
+    image: golang:${GOLANG_VERSION}-alpine
+    platform: "linux/$GOARCH"
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - TEST_EXCLUDE
+      - TEST_FILTER
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+    command:
+      - test
+      - -failfast
+      - ./...
+      - -skip
+      - ${TEST_EXCLUDE:-E2E}
+      - -run
+      - ${TEST_FILTER:-.*}
+  # Runs end-to-end tests against real flight data
+  # providers.
+  #
+  # NOTE: You might be rate-limited by these
+  # providers if you run these too often. Exercise caution,
+  # and rely on unit tests as much as you can before running
+  # this service.
+  e2e:
+    depends_on:
+      retrieve_timezones:
+        condition: service_completed_successfully
+    image: golang:${GOLANG_VERSION}-alpine
+    platform: "linux/$GOARCH"
+    volumes:
+      - gomod:/go/pkg/mod
+      - gocache:/root/.cache/go-build
+      - tzdb-vol:/data
+      - $PWD:/usr/local/go/src/project
+    working_dir: /usr/local/go/src/project
+    entrypoint: [ "go" ]
+    environment:
+      - TEST_EXCLUDE
+      - TEST_FILTER
+      - CGO_ENABLED=0
+      - GOOS=${GOOS:-linux}
+      - GOARCH=${GOARCH:-arm64}
+    command:
+      - test
+      - -failfast
+      - ./...
+      - -run
+      - E2E
+  # Deploys Flight Summarizer to GitHub Container Registry.
+  #
+  # Run `build` via `just` before running this, as this service
+  # can handle deployments for multiple Docker-compatible operating
+  # systems and architectures whereas `build` on its own only builds
+  # binaries for `linux/arm64`.
   deploy-to-ghcr:
     image: docker:27.4.1-cli-alpine3.21
     volumes:
@@ -48,70 +132,11 @@ services:
             --push \
             .
         done
-  build:
-    image: golang:${GOLANG_VERSION}-alpine
-    volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
-      - $PWD/out:/out
-      - $PWD:/usr/local/go/src/project
-    working_dir: /usr/local/go/src/project
-    entrypoint: [ "sh" ]
-    environment:
-      - CGO_ENABLED=0
-      - GOOS=${GOOS:-linux}
-      - GOARCH=${GOARCH:-arm64}
-      - PROJECT_NAME
-    command:
-      - -c
-      - |
-        go build -o "/out/${PROJECT_NAME}-$${GOOS}-$${GOARCH}" ./cmd/${PROJECT_NAME}/main.go
-  test:
-    image: golang:${GOLANG_VERSION}-alpine
-    volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
-      - $PWD:/usr/local/go/src/project
-    working_dir: /usr/local/go/src/project
-    entrypoint: [ "go" ]
-    environment:
-      - TEST_EXCLUDE
-      - TEST_FILTER
-      - CGO_ENABLED=0
-      - GOOS=${GOOS:-linux}
-      - GOARCH=${GOARCH:-arm64}
-    command:
-      - test
-      - -failfast
-      - ./...
-      - -skip
-      - ${TEST_EXCLUDE:-E2E}
-      - -run
-      - ${TEST_FILTER:-.*}
-  e2e:
-    depends_on:
-      retrieve_timezones:
-        condition: service_completed_successfully
-    image: golang:${GOLANG_VERSION}-alpine
-    volumes:
-      - gomod:/go/pkg/mod
-      - gocache:/root/.cache/go-build
-      - tzdb-vol:/data
-      - $PWD:/usr/local/go/src/project
-    working_dir: /usr/local/go/src/project
-    entrypoint: [ "go" ]
-    environment:
-      - TEST_EXCLUDE
-      - TEST_FILTER
-      - CGO_ENABLED=0
-      - GOOS=${GOOS:-linux}
-      - GOARCH=${GOARCH:-arm64}
-    command:
-      - test
-      - -failfast
-      - ./...
-      - -run
-      - E2E
+  # Retrieves timezone data from timezonedb.com.
+  #
+  # NOTE: This is a hard dependency that was written when I first
+  # wrote Flight Summarizer. This service will likely move
+  # into a Go helper app sometime in the future.
   retrieve_timezones:
     image: curlimages/curl:8.11.1
     entrypoint: sh

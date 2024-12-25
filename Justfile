@@ -52,12 +52,13 @@ build:
 
 # tests Flight Summarizer ✈️
 test:
-  export GOARCH="$$(just --one _arch)" || exit 1
+  #!/usr/bin/env bash
+  export GOARCH="$(just --one _arch)" || exit 1
   just --one _docker_compose run --rm test
 
 # performs Flight Summarizer end-to-end tests
 e2e:
-  export GOARCH="$$(just --one _arch)" || exit 1
+  export GOARCH="$(just --one _arch)" || exit 1
   just --one _docker_compose run --rm e2e
 
 _docker_compose *ARGS:
