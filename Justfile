@@ -77,7 +77,7 @@ e2e:
   fi
   set -o allexport
   source <(grep -Ev '^#' <<< "$tailscale_env")
-  just --one _docker_compose run --rm e2e
+  just --one _docker_compose run --rm e2e-ci
 
 _ensure_gpg_env:
   #!/usr/bin/env bash
