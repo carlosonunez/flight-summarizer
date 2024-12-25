@@ -23,6 +23,7 @@ func (s *FlighteraFlightSummarizer) Init(opts *summarizer.FlightSummarizerOption
 	if opts.FlightNumber == "" {
 		return errors.New("flight number is missing; please provide it")
 	}
+	s.summary = summarizer.NewEmptyFlightSummary()
 	if s.tzdb == nil {
 		if s.tzdb, err = timezonedb.NewTimeZoneDBDotComDB(timezonedb.DEFAULT_OPTIONS); err != nil {
 			return err
