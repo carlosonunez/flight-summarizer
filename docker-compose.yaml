@@ -20,8 +20,8 @@ services:
   build:
     image: golang:${GOLANG_VERSION}-alpine
     volumes:
-      - $PWD/.gomod:/go/pkg/mod
-      - $PWD/.gocache:/root/.cache/go-build
+      - ${GOMOD_DIR:-$PWD/.gomod}:/go/pkg/mod
+      - ${GOCACHE_DIR:-$PWD/.gocache}:/root/.cache/go-build
       - $PWD/out:/out
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
@@ -40,8 +40,8 @@ services:
     image: golang:${GOLANG_VERSION}-alpine
     platform: "linux/$GOARCH"
     volumes:
-      - $PWD/.gomod:/go/pkg/mod
-      - $PWD/.gocache:/root/.cache/go-build
+      - ${GOMOD_DIR:-$PWD/.gomod}:/go/pkg/mod
+      - ${GOCACHE_DIR:-$PWD/.gocache}:/root/.cache/go-build
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
     entrypoint: [ "go" ]
@@ -73,8 +73,8 @@ services:
     image: golang:${GOLANG_VERSION}-alpine
     platform: "linux/$GOARCH"
     volumes:
-      - $PWD/.gomod:/go/pkg/mod
-      - $PWD/.gocache:/root/.cache/go-build
+      - ${GOMOD_DIR:-$PWD/.gomod}:/go/pkg/mod
+      - ${GOCACHE_DIR:-$PWD/.gocache}:/root/.cache/go-build
       - tzdb-vol:/data
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
@@ -101,8 +101,8 @@ services:
     platform: "linux/$GOARCH"
     network_mode: service:tailscale
     volumes:
-      - $PWD/.gomod:/go/pkg/mod
-      - $PWD/.gocache:/root/.cache/go-build
+      - ${GOMOD_DIR:-$PWD/.gomod}:/go/pkg/mod
+      - ${GOCACHE_DIR:-$PWD/.gocache}:/root/.cache/go-build
       - tzdb-vol:/data
       - $PWD:/usr/local/go/src/project
     working_dir: /usr/local/go/src/project
