@@ -37,7 +37,6 @@ start-server: build
 # builds Flight Summarizer ✈️
 build:
   #!/usr/bin/env bash
-  export GOARCH="$$(just --one _arch)" || exit 1
   for project in cmd/*
   do
     for arch in $BUILD_ARCHS
@@ -53,12 +52,10 @@ build:
 # tests Flight Summarizer ✈️
 test:
   #!/usr/bin/env bash
-  export GOARCH="$(just --one _arch)" || exit 1
   just --one _docker_compose run --rm test
 
 # performs Flight Summarizer end-to-end tests
 e2e:
-  export GOARCH="$(just --one _arch)" || exit 1
   just --one _docker_compose run --rm e2e
 
 _docker_compose *ARGS:
@@ -69,29 +66,6 @@ _docker_compose *ARGS:
     exit 1
   fi
   docker-compose --log-level ERROR {{ARGS}}
-
-_arch:
-  #!/usr/bin/env bash
-  arch="${RUNNER_ARCH:-$(uname -p)}"
-  if test -z "$arch"
-  then
-    >&2 echo "ERROR: Couldn't find this machine's CPU architecture."
-    exit 1
-  fi
-  case "${arch,,}" in
-  *x86*|*amd*)
-    echo "amd64"
-    exit 0
-    ;;
-  *arm*)
-    echo "arm64"
-    exit 0
-    ;;
-  *)
-    >&2 echo "ERROR: Unsupported architecture: $arch"
-    exit 1
-    ;;
-  esac
 
 _ensure_gh_creds_available:
   #!/usr/bin/env bash

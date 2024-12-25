@@ -22,11 +22,15 @@ jobs:
       - uses: KengoTODA/actions-setup-docker-compose@main
         name: Set up Docker Compose
         with:
-          version: '2.23.3'
+          version: '2.27.1'
 
       - name: Test Flightera Summarizer
         run: just test
+        env:
+          GOARCH: "amd64"
   e2e:
+    needs:
+      - test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -40,10 +44,12 @@ jobs:
       - uses: KengoTODA/actions-setup-docker-compose@main
         name: Set up Docker Compose
         with:
-          version: '2.23.3'
+          version: '2.27.1'
 
       - name: Run e2e tests Flightera Summarizer
         run: just e2e
+        env:
+          GOARCH: "amd64"
   publish:
     needs:
       - test
@@ -61,10 +67,10 @@ jobs:
       - uses: KengoTODA/actions-setup-docker-compose@main
         name: Set up Docker Compose
         with:
-          version: '2.23.3'
+          version: '2.27.1'
 
-      - name: Publish ${{ github.repository }}
-        uses: macbre/push-to-ghcr@master
-        with:
-          image_name: ${{ github.repository }}  # it will be lowercased internally
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish Flight Summarizer
+        run: just deploy_to_ghcr
+        env:
+          GITHUB_REPOSITORY: "${{ github.repository }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
