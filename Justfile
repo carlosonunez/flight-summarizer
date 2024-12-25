@@ -7,6 +7,7 @@ export GOARCH := env("GOARCH", "arm64")
 
 # Cleans up our workspace
 clean: _remove_buildx_builders
+  just --one _docker_compose down
 
 # Deploys Flight Summarizer to Github Container Registry
 deploy_to_ghcr: _ensure_gh_creds_available build
@@ -56,8 +57,29 @@ test:
   just --one _docker_compose run --rm test
 
 # performs Flight Summarizer end-to-end tests
-e2e:
+e2e: _ensure_gpg_env
+  #!/usr/bin/env bash
+  set -eo pipefail
+  tailscale_env=$(just --one _docker_compose run --rm sops sops \
+    -d --extract '[\"config\"][\"tailscale\"][\"env\"]' \
+    config.yaml)
+  if test -z "$tailscale_env"
+  then
+    >&2 echo "ERROR: Couldn't get Tailscale env vars"
+    exit 1
+  fi
+  set -o allexport
+  source <(grep -Ev '^#' <<< "$tailscale_env")
   just --one _docker_compose run --rm e2e
+
+_ensure_gpg_env:
+  #!/usr/bin/env bash
+  for key in GPG_PRIVATE_KEY_B64 GPG_PASSPHRASE
+  do
+    test -n "${!key}" && continue
+    >&2 echo "ERROR: Please define $key"
+    exit 1
+  done
 
 _docker_compose *ARGS:
   #!/usr/bin/env bash
