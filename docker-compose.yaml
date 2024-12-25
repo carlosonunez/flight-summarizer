@@ -96,7 +96,7 @@ services:
   e2e-ci:
     depends_on:
       tailscale:
-        condition: service_started
+        condition: service_healthy
       retrieve_timezones:
         condition: service_completed_successfully
     image: golang:${GOLANG_VERSION}-alpine
@@ -201,6 +201,7 @@ services:
     environment:
       - TS_AUTHKEY
       - TS_EXTRA_ARGS
+      - TS_HEALTHCHECK_URL
       - TS_STATE_DIR=/data/tailscale
       - TS_USERSPACE=false
     volumes:
@@ -211,6 +212,16 @@ services:
       - net_admin
       - sys_module
     restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -O
+        - /dev/null
+        - "$TS_HEALTHCHECK_URL"
+      interval: 2s
+      timeout: 60s
+      retries: 20
   sops:
     build:
       dockerfile: sops.Dockerfile
