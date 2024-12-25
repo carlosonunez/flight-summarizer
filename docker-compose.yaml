@@ -144,7 +144,7 @@ services:
     environment:
       - REFRESH_TZ
     volumes:
-      - tzdb-vol:/out
+      - tzdb-vol:/data
       - $PWD/include/retrieve_tz.sh:/script.sh
     command:
       - /script.sh
