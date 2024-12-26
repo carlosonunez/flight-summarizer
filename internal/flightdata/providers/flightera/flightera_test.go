@@ -11,7 +11,7 @@ import (
 )
 
 var tzdb *timezonedb.TimeZoneDBDotComDB
-var browserLiveOnTimeEarly, browserLiveLateEarly *MockBrowser
+var browserLiveOnTimeEarly, browserLiveLateEarly, browserScheduled *MockBrowser
 
 func TestOriginAirport(t *testing.T) {
 	iata, err := GetOriginAirport(browserLiveOnTimeEarly)
@@ -57,6 +57,34 @@ func TestDestinationActualLandingTime(t *testing.T) {
 	assert.Equal(t, actual, got)
 }
 
+func TestScheduledOriginScheduledDepartureTime(t *testing.T) {
+	want := timezone.MustParseISO8601Time("2024-12-26T17:05:00-06:00 CST")
+	got, err := GetOriginScheduledDepartureTime(browserScheduled, tzdb)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestScheduledOriginActualDepartureTime(t *testing.T) {
+	want := timezone.MustParseISO8601Time("2024-12-26T17:05:00-06:00 CST")
+	got, err := GetOriginActualDepartureTime(browserScheduled, tzdb)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestScheduledDestinationScheduledLandingTime(t *testing.T) {
+	want := timezone.MustParseISO8601Time("2024-12-26T17:56:00-06:00 CST")
+	got, err := GetDestinationScheduledLandingTime(browserScheduled, tzdb)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestScheduledDestinationActualLandingTime(t *testing.T) {
+	want := timezone.MustParseISO8601Time("2024-12-26T17:56:00-06:00 CST")
+	got, err := GetDestinationActualLandingTime(browserScheduled, tzdb)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
 func TestFlighteraFlightNumber(t *testing.T) {
 	want := "AAL5005"
 	got, err := GetFlightNumber(browserLiveLateEarly)
@@ -79,6 +107,10 @@ func init() {
 		panic(err)
 	}
 	browserLiveLateEarly, err = NewMockBrowser(LiveLateDepartureEarlyArrival)
+	if err != nil {
+		panic(err)
+	}
+	browserScheduled, err = NewMockBrowser(Scheduled)
 	if err != nil {
 		panic(err)
 	}

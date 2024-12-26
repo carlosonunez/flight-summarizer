@@ -12,11 +12,13 @@ import (
 const (
 	LiveOnTimeDepartureEarlyArrival testScenario = iota
 	LiveLateDepartureEarlyArrival
+	Scheduled
 )
 
 var testScenarioMap map[testScenario]string = map[testScenario]string{
 	LiveOnTimeDepartureEarlyArrival: "fixtures/nojs/live_ontime_departure_early_arrival",
 	LiveLateDepartureEarlyArrival:   "fixtures/nojs/live_late_departure_early_arrival",
+	Scheduled:                       "fixtures/nojs/scheduled",
 }
 
 type testScenario int64
