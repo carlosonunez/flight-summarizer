@@ -46,7 +46,7 @@ func testTimes(t *testing.T, want *summarizer.Time, got *summarizer.Time, format
 	// location data in them, which ours do not.
 	// We're going to do string-based equality to work around this.
 	wantStr := want.Format(time.RFC3339)
-	gotStr := want.Format(time.RFC3339)
+	gotStr := got.Format(time.RFC3339)
 	assert.Equal(t, wantStr, gotStr, fmt.Sprintf(format, parts...))
 }
 
