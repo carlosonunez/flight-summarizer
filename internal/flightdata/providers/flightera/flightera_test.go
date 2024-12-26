@@ -85,6 +85,20 @@ func TestScheduledDestinationActualLandingTime(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestOriginCity(t *testing.T) {
+	want := "Dallas"
+	got, err := GetOriginCity(browserLiveLateEarly)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestDestinationCity(t *testing.T) {
+	want := "Durango"
+	got, err := GetDestinationCity(browserLiveLateEarly)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
 func TestFlighteraFlightNumber(t *testing.T) {
 	want := "AAL5005"
 	got, err := GetFlightNumber(browserLiveLateEarly)
