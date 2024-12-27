@@ -16,6 +16,7 @@ func TestSummaryToJSON(t *testing.T) {
 	"flight_number": "FAKE1",
 	"origin": {
 		"airport": "FOO",
+		"city": "Foo City",
 		"times": {
 				"scheduled": "2024-12-22 17:22 PST",
 				"actual": "2024-12-22 17:00 PST"
@@ -23,6 +24,7 @@ func TestSummaryToJSON(t *testing.T) {
 	},
 	"destination": {
 		"airport": "BAR",
+		"city": "Bar City",
 		"times": {
 			"scheduled": "2024-12-22 18:22 PST",
 			"actual": "2024-12-22 18:00 PST"
@@ -33,6 +35,7 @@ func TestSummaryToJSON(t *testing.T) {
 		FlightNumber: "FAKE1",
 		Origin: &Point{
 			AirportIATA: "FOO",
+			City:        "Foo City",
 			Times: &FlightSummaryDateTimes{
 				Scheduled: &Time{mustParseTime("2024-12-22 17:22 PST")},
 				Actual:    &Time{mustParseTime("2024-12-22 17:00 PST")},
@@ -40,6 +43,7 @@ func TestSummaryToJSON(t *testing.T) {
 		},
 		Destination: &Point{
 			AirportIATA: "BAR",
+			City:        "Bar City",
 			Times: &FlightSummaryDateTimes{
 				Scheduled: &Time{mustParseTime("2024-12-22 18:22 PST")},
 				Actual:    &Time{mustParseTime("2024-12-22 18:00 PST")},

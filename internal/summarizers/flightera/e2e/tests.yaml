@@ -5,11 +5,13 @@ tests:
       flight_number: AAL1
       origin:
         airport: JFK
+        city: New York
         times:
-          scheduled: 2024-12-11T06:58:00-05:00
-          actual: 2024-12-11T07:06:00-05:00
+          scheduled: 2024-12-11T06:58:00Z-05:00 EST
+          actual: 2024-12-11T07:06:00Z-05:00 EST
       destination:
         airport: LAX
+        city: Los Angeles
         times:
-          scheduled: 2024-12-11T10:20:00-08:00
-          actual: 2024-12-11T10:02:00-08:00
+          scheduled: 2024-12-11T10:20:00Z-08:00 PST
+          actual: 2024-12-11T10:02:00Z-08:00 PST

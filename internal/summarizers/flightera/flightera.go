@@ -47,6 +47,7 @@ func (s *FlighteraFlightSummarizer) Summarize() (*summarizer.FlightSummary, erro
 	b := s.browser
 	ops := []func(*FlighteraFlightSummarizer, browser.Browser) error{
 		retrieveFlightNumber,
+		retrieveCities,
 		summarizeAirports,
 		summarizeDepartureTimes,
 		summarizeLandingTimes,
@@ -57,6 +58,16 @@ func (s *FlighteraFlightSummarizer) Summarize() (*summarizer.FlightSummary, erro
 		}
 	}
 	return s.summary, nil
+}
+
+func retrieveCities(s *FlighteraFlightSummarizer, b browser.Browser) (err error) {
+	if s.summary.Origin.City, err = flightera.GetOriginCity(b); err != nil {
+		return err
+	}
+	if s.summary.Destination.City, err = flightera.GetDestinationCity(b); err != nil {
+		return err
+	}
+	return nil
 }
 
 func retrieveFlightNumber(s *FlighteraFlightSummarizer, b browser.Browser) (err error) {

@@ -76,6 +76,9 @@ type Point struct {
 	// Airport is the IATA identifier for the airport at this point.
 	AirportIATA string `json:"airport" yaml:"airport"`
 
+	// City is the origin city.
+	City string `json:"city" yaml:"city"`
+
 	// Times outlines the scheduled and actual times associated with this point.
 	Times *FlightSummaryDateTimes `json:"times" yaml:"times"`
 }

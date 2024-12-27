@@ -18,9 +18,11 @@ func (s *ExampleFlightSummarizer) Init(opts *FlightSummarizerOptions) error {
 func (s *ExampleFlightSummarizer) Summarize() (*FlightSummary, error) {
 	s.summary.FlightNumber = "FAKE1"
 	s.summary.Origin.AirportIATA = "FOO"
+	s.summary.Origin.City = "Foo City"
 	s.summary.Origin.Times.Scheduled.Time = mustParseRFC3339Time("2024-12-23T11:07:00Z-08:00 PST")
 	s.summary.Origin.Times.Actual.Time = mustParseRFC3339Time("2024-12-23T11:00:00Z-08:00 PST")
 	s.summary.Destination.AirportIATA = "BAR"
+	s.summary.Destination.City = "Bar City"
 	s.summary.Destination.Times.Scheduled.Time = mustParseRFC3339Time("2024-12-23T11:07:00Z-08:00 PST")
 	s.summary.Destination.Times.Actual.Time = mustParseRFC3339Time("2024-12-23T11:00:00Z-08:00 PST")
 	return s.summary, nil

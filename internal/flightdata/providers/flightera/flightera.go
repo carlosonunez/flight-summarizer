@@ -87,8 +87,37 @@ func flighteraGetScheduledDeparture(b browser.Browser, db timezone.TimeZoneDatab
 	return flighteraGetTime(b, db, t, scheduled)
 }
 
+// GetOriginCity gets the city the flight is leaving from. Unfortunately,
+// Flightera doesn't expose states.
+func GetOriginCity(b browser.Browser) (string, error) {
+	return flighteraGetCity(b, origin)
+}
+
+// GetDestinationCity gets the city the flight is leaving from. Unfortunately,
+// Flightera doesn't expose states.
+func GetDestinationCity(b browser.Browser) (string, error) {
+	return flighteraGetCity(b, destination)
+}
+
 func flighteraGetActualDeparture(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType) (*time.Time, error) {
 	return flighteraGetTime(b, db, t, actual)
+}
+
+func flighteraGetCity(b browser.Browser, t flightSideType) (string, error) {
+	var idx int
+	switch t {
+	case origin:
+		idx = 0
+	case destination:
+		idx = 1
+	default:
+		return "", fmt.Errorf("no matching flight side type: %d", t)
+	}
+	nodes, err := getNodesOnPage(b, "//span[contains(@class, 'text-lg') and contains(@class, 'font-medium')]")
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(htmlquery.InnerText(nodes[idx]), "\n"), nil
 }
 
 func flighteraGetTime(b browser.Browser, db timezone.TimeZoneDatabase, t flightSideType, dt dateExtractType) (*time.Time, error) {

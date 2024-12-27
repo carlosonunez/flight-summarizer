@@ -43,6 +43,7 @@ func TestRetrievesFlightSummary(t *testing.T) {
 		"flight_number": "FAKE1",
 		"origin": {
 			"airport": "FOO",
+			"city": "Foo City",
 			"times": {
 					"scheduled": "2024-12-23 11:07 PST",
 					"actual": "2024-12-23 11:00 PST"
@@ -50,6 +51,7 @@ func TestRetrievesFlightSummary(t *testing.T) {
 		},
 		"destination": {
 			"airport": "BAR",
+			"city": "Bar City",
 			"times": {
 					"scheduled": "2024-12-23 11:07 PST",
 					"actual": "2024-12-23 11:00 PST"
