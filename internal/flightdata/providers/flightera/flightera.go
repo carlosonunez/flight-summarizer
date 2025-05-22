@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -130,15 +131,21 @@ func flighteraGetTime(b browser.Browser, db timezone.TimeZoneDatabase, t flightS
 	default:
 		return nil, fmt.Errorf("no matching flight side type: %d", t)
 	}
+	titleNodes, err := getNodesOnPage(b, "//div[contains(@class, 'col-span-3')]")
+	if err != nil {
+		return nil, err
+	}
+	if len(titleNodes) < 2 {
+		return nil, errors.New("unable to find the flight's date on page")
+	}
+	flightAndFlightDate := strings.ReplaceAll(htmlquery.InnerText(titleNodes[1]), "\n", ";")
+	yearStr := regexp.MustCompile("^.*([0-9]{4}).*$").ReplaceAllString(flightAndFlightDate, "$1")
+	fmt.Printf("DEBUG: flight date (year): %s", yearStr)
+	year, err := strconv.Atoi(yearStr)
 	nodes, err := getNodesOnPage(b, "//span[text()[contains(.,'UTC')]]")
 	if err != nil {
 		return nil, err
 	}
-	// Unfortunately, Flightera doesn't expose the year the flight occurred on the
-	// page. We'll assume that it happened this year.
-	// TODO: Use the year supplied by query param when Flight Summarizer supports
-	// dates.
-	year := time.Now().Year()
 	timeRaw := htmlquery.InnerText(nodes[idx].Parent)
 	monthAndDay, err := extractMonthDayFromRawTime(timeRaw, dt)
 	if err != nil {
