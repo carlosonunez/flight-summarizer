@@ -50,7 +50,7 @@ func TestDestinationScheduledLandingTime(t *testing.T) {
 
 func TestDestinationActualLandingTime(t *testing.T) {
 	scheduled := timezone.MustParseISO8601Time("2024-12-19T16:05:00-07:00 MST")
-	actual := timezone.MustParseISO8601Time("2024-12-19T15:52:00-07:00 MST")
+	actual := timezone.MustParseISO8601Time("2024-12-19T15:48:00-07:00 MST")
 	got, err := GetDestinationActualLandingTime(browserLiveLateEarly, tzdb)
 	require.NoError(t, err)
 	assert.NotEqual(t, scheduled, got)

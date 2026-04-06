@@ -131,26 +131,32 @@ func flighteraGetTime(b browser.Browser, db timezone.TimeZoneDatabase, t flightS
 	default:
 		return nil, fmt.Errorf("no matching flight side type: %d", t)
 	}
-	titleNodes, err := getNodesOnPage(b, "//div[contains(@class, 'col-span-3')]")
+	yearNode, err := getNodesOnPage(b, "//div[contains(@class, 'text-sm') or contains(@class, 'text-md')]")
 	if err != nil {
 		return nil, err
 	}
-	if len(titleNodes) < 2 {
-		return nil, errors.New("unable to find the flight's date on page")
+	for _, n := range yearNode {
+		fmt.Printf("year node: %s", htmlquery.InnerText(n))
 	}
-	flightAndFlightDate := strings.ReplaceAll(htmlquery.InnerText(titleNodes[1]), "\n", ";")
+	flightAndFlightDate := strings.ReplaceAll(htmlquery.InnerText(yearNode[0]), "\n", ";")
 	yearStr := regexp.MustCompile("^.*([0-9]{4}).*$").ReplaceAllString(flightAndFlightDate, "$1")
-	fmt.Printf("DEBUG: flight date (year): %s", yearStr)
 	year, err := strconv.Atoi(yearStr)
-	nodes, err := getNodesOnPage(b, "//span[text()[contains(.,'UTC')]]")
+	var nodes []*html.Node
+	for _, tag := range []string{"div", "span"} {
+		nodes, err = getNodesOnPage(b, fmt.Sprintf("//%s[text()[contains(.,'UTC')]]", tag))
+		if err == nil && len(nodes) > 0 {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 	timeRaw := htmlquery.InnerText(nodes[idx].Parent)
-	monthAndDay, err := extractMonthDayFromRawTime(timeRaw, dt)
+	monthAndDay, err := extractMonthDayFromRawTime(flightAndFlightDate, dt)
 	if err != nil {
 		return nil, err
 	}
+	monthAndDay = strings.ReplaceAll(monthAndDay, ".", "")
 	localTZ, err := extractLocalTZFromRawTime(timeRaw, dt)
 	if err != nil {
 		return nil, err
@@ -159,10 +165,12 @@ func flighteraGetTime(b browser.Browser, db timezone.TimeZoneDatabase, t flightS
 	if err != nil {
 		return nil, err
 	}
-	timeParsed, err := time.Parse("02 Jan 2006 15:04 UTC", fmt.Sprintf("%s %d %s UTC",
+	timeStr := fmt.Sprintf("%s %d %s UTC",
 		monthAndDay,
 		year,
-		localTime))
+		localTime)
+	fmt.Printf("time str: %s, time raw: %s", timeStr, timeRaw)
+	timeParsed, err := time.Parse("02 Jan 2006 15:04 UTC", timeStr)
 	if err != nil {
 		return nil, err
 	}
@@ -190,9 +198,28 @@ func extractLocalTimeFromRawTime(text string, dt dateExtractType) (string, error
 	return extractFromRawTime(text, localTime, dt)
 }
 
-func stripJunkFromRawTime(text string) []string {
-	re := regexp.MustCompile("([0-9]{1,2} [A-Za-z]+ [0-9]{2}:[0-9]{2}|[A-Z]{3}|[0-9]{2}:[0-9]{2} [A-Z]{3})")
-	return re.FindAllString(text, -1)
+func stripJunkFromRawTime(text string) (found []string) {
+	re := regexp.MustCompile("[0-9]{1,2}\\. [A-Za-z]{3}|[0-9]{1,2} [A-Za-z]+ [0-9]{2}:[0-9]{2}|[A-Z]{3}|[0-9]{2}:[0-9]{2} [A-Z]{3}|[0-9]{2}:[0-9]{2}")
+	parts := re.FindAllString(text, -1)
+	ignoreParts := []string{
+		"departure",
+		"arrival",
+		"terminal",
+		"gate",
+	}
+	for _, part := range parts {
+		var ignorePart bool
+		for _, ignore := range ignoreParts {
+			if strings.Contains(ignore, strings.ToLower(part)) {
+				ignorePart = true
+				continue
+			}
+		}
+		if !ignorePart {
+			found = append(found, part)
+		}
+	}
+	return found
 }
 
 func extractFromRawTime(text string, t datePartExtractType, dt dateExtractType) (string, error) {
@@ -200,20 +227,22 @@ func extractFromRawTime(text string, t datePartExtractType, dt dateExtractType) 
 	var wantIndex int
 	var scheduleDriftDetected, considerScheduleDrifts, seen bool
 	timeParts := stripJunkFromRawTime(text)
-	if len(timeParts) > 3 {
+	if len(timeParts) >= 3 {
+		timeParts = []string{timeParts[0], timeParts[2]}
 		scheduleDriftDetected = true
+		fmt.Printf("schedule drift detected! time parts: %+v\n", timeParts)
 	}
 	switch t {
 	case monthAndDay:
-		pattern = "[0-9]{1,2} [A-Za-z]{3}"
+		pattern = "[0-9]{1,2}?[ \\.]{1,}[A-Za-z]{3}"
 		if dt == scheduled {
 			considerScheduleDrifts = true
 		}
 	case localTZ:
-		pattern = "^([A-Z]{3})$"
+		pattern = "([A-Z]{3})"
 	case localTime:
 		wantIndex = 1
-		pattern = "[0-9]{1,2} [A-Za-z]{3} ([0-9]{2}:[0-9]{2})"
+		pattern = "([0-9]{2}:[0-9]{2})"
 		if dt == scheduled {
 			considerScheduleDrifts = true
 		}
@@ -227,10 +256,12 @@ func extractFromRawTime(text string, t datePartExtractType, dt dateExtractType) 
 	for _, line := range timeParts {
 		if re.Match([]byte(line)) {
 			found := strings.TrimSpace(re.FindAllStringSubmatch(line, -1)[0][wantIndex])
+			fmt.Printf("found time part: %s, seen: %+v\n", found, seen)
 			if !considerScheduleDrifts || (considerScheduleDrifts && !scheduleDriftDetected) {
 				return found, nil
 			}
 			if scheduleDriftDetected && seen {
+				fmt.Printf("returning: %s", found)
 				return found, nil
 			}
 			seen = true
